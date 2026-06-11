@@ -1,0 +1,86 @@
+cmake_minimum_required(VERSION 3.5)
+project(legged_perceptive_interface)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+find_package(ament_cmake REQUIRED)
+find_package(legged_interface REQUIRED)
+find_package(convex_plane_decomposition_msgs REQUIRED)
+find_package(convex_plane_decomposition_ros REQUIRED)
+find_package(grid_map_sdf REQUIRED)
+find_package(ocs2_sphere_approximation REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(pinocchio REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system filesystem log_setup log)
+# grid_map_sdf's public header includes <pcl/point_cloud.h> but its ament
+# config does not propagate PCL include dirs, so we must pull PCL in ourselves.
+find_package(PCL REQUIRED)
+
+add_library(${PROJECT_NAME}
+  src/constraint/FootCollisionConstraint.cpp
+  src/constraint/FootPlacementConstraint.cpp
+  src/constraint/SphereSdfConstraint.cpp
+  src/ConvexRegionSelector.cpp
+  src/PerceptiveLeggedReferenceManager.cpp
+  src/PerceptiveLeggedPrecomputation.cpp
+  src/PerceptiveLeggedInterface.cpp
+)
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    ${EIGEN3_INCLUDE_DIRS}
+    ${PCL_INCLUDE_DIRS}
+)
+target_link_libraries(${PROJECT_NAME}
+  pinocchio::pinocchio
+  Boost::filesystem
+  Boost::system
+  ${PCL_LIBRARIES}
+)
+ament_target_dependencies(${PROJECT_NAME}
+  legged_interface
+  convex_plane_decomposition_msgs
+  convex_plane_decomposition_ros
+  grid_map_sdf
+  ocs2_sphere_approximation
+)
+target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_PINOCCHIO_FLAGS})
+
+install(TARGETS ${PROJECT_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION include/${PROJECT_NAME}
+)
+
+install(
+  EXPORT export_${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
+)
+
+ament_export_include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_dependencies(
+  legged_interface
+  convex_plane_decomposition_msgs
+  convex_plane_decomposition_ros
+  grid_map_sdf
+  ocs2_sphere_approximation
+  pinocchio
+  Eigen3
+  Boost
+  PCL
+)
+
+ament_package()
