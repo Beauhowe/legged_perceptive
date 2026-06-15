@@ -8,4 +8,12 @@
         </description>
     </class>
 
+    <class name="legged/PerceptiveCheaterController"
+           type="legged::PerceptiveCheaterController"
+           base_class_type="controller_interface::ControllerInterface">
+        <description>
+            The perceptive legged controller using ground-truth odometry (simulation only).
+        </description>
+    </class>
+
 </library>

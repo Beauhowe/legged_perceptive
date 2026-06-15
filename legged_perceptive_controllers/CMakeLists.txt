@@ -52,6 +52,7 @@ add_library(${PROJECT_NAME} SHARED
         src/visualization/FootPlacementVisualization.cpp
         src/visualization/SphereVisualization.cpp
         src/PerceptiveController.cpp
+        src/PerceptiveCheaterController.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
