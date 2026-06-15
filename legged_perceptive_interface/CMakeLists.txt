@@ -13,9 +13,6 @@ find_package(ocs2_sphere_approximation REQUIRED)
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(pinocchio REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem log_setup log)
-# grid_map_sdf's public header includes <pcl/point_cloud.h> but its ament
-# config does not propagate PCL include dirs, so we must pull PCL in ourselves.
-find_package(PCL REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/constraint/FootCollisionConstraint.cpp
@@ -32,7 +29,6 @@ target_include_directories(${PROJECT_NAME}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${EIGEN3_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
 )
 target_link_libraries(${PROJECT_NAME}
   pinocchio::pinocchio
@@ -68,7 +64,6 @@ install(
 ament_export_include_directories(
   include
   ${EIGEN3_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
 )
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(
@@ -80,7 +75,6 @@ ament_export_dependencies(
   pinocchio
   Eigen3
   Boost
-  PCL
 )
 
 ament_package()

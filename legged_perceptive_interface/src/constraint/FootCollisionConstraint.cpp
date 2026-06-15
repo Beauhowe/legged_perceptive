@@ -32,7 +32,7 @@ bool FootCollisionConstraint::isActive(scalar_t time) const {
 
 vector_t FootCollisionConstraint::getValue(scalar_t /*time*/, const vector_t& state, const PreComputation& /*preComp*/) const {
   vector_t value(1);
-  value(0) = sdfPtr_->getInterpolatedDistanceAt(grid_map::Position3(endEffectorKinematicsPtr_->getPosition(state).front())) - clearance_;
+  value(0) = sdfPtr_->value(grid_map::Position3(endEffectorKinematicsPtr_->getPosition(state).front())) - clearance_;
   return value;
 }
 
@@ -40,7 +40,7 @@ VectorFunctionLinearApproximation FootCollisionConstraint::getLinearApproximatio
                                                                                   const PreComputation& preComp) const {
   VectorFunctionLinearApproximation approx = VectorFunctionLinearApproximation::Zero(1, state.size(), 0);
   approx.f = getValue(time, state, preComp);
-  approx.dfdx = sdfPtr_->getDistanceGradientAt(grid_map::Position3(endEffectorKinematicsPtr_->getPosition(state).front())).transpose() *
+  approx.dfdx = sdfPtr_->derivative(grid_map::Position3(endEffectorKinematicsPtr_->getPosition(state).front())).transpose() *
                 endEffectorKinematicsPtr_->getPositionLinearApproximation(state).front().dfdx;
   return approx;
 }

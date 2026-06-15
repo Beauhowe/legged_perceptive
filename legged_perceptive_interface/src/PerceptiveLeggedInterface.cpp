@@ -44,14 +44,7 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
   planarTerrainPtr_->gridMap.setGeometry(grid_map::Length(5.0, 5.0), 0.03);
   planarTerrainPtr_->gridMap.add(layer, 0);
   planarTerrainPtr_->gridMap.add("smooth_planar", 0);
-  signedDistanceFieldPtr_ = std::make_shared<grid_map::SignedDistanceField>();
-  // apt (RSL) grid_map_sdf 2.0.1 API: default-construct then calculate.
-  // Original (ANYbotics master) used SignedDistanceField(gridMap, layer, -0.1, 0.1),
-  // i.e. an explicit absolute Z range. The apt version derives the Z range from the
-  // data and only takes a clearance above the max height; we pass 0.1 to mirror the
-  // original upper bound. This SDF is a flat placeholder (elevation == 0) that the
-  // controller's PlanarTerrainReceiver overwrites with the real elevation map at runtime.
-  signedDistanceFieldPtr_->calculateSignedDistanceField(planarTerrainPtr_->gridMap, layer, 0.1);
+  signedDistanceFieldPtr_ = std::make_shared<grid_map::SignedDistanceField>(planarTerrainPtr_->gridMap, layer, -0.1, 0.1);
 
   LeggedInterface::setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 

@@ -15,6 +15,7 @@ PlanarTerrainReceiver::PlanarTerrainReceiver(rclcpp::Node::SharedPtr node,
                                              std::shared_ptr<grid_map::SignedDistanceField> signedDistanceFieldPtr,
                                              const std::string& mapTopic, std::string sdfElevationLayer)
     : node_(std::move(node)),
+      signedDistanceField_(*signedDistanceFieldPtr),
       planarTerrainPtr_(std::move(planarTerrainPtr)),
       sdfPtr_(std::move(signedDistanceFieldPtr)),
       sdfElevationLayer_(std::move(sdfElevationLayer)),
@@ -30,14 +31,7 @@ void PlanarTerrainReceiver::preSolverRun(scalar_t /*initTime*/, scalar_t /*final
     updated_ = false;
 
     *planarTerrainPtr_ = planarTerrain_;
-    // The original mutated the shared SDF in place via operator=. apt grid_map_sdf 2.0.1 deletes
-    // copy-assignment (const member) but allows copy-construction, so we destroy and copy-construct
-    // in place to keep the object's address — every constraint aliases this same shared_ptr.
-    // preSolverRun is solver-synchronized, so no constraint reads the SDF concurrently here.
-    if (stagedSdf_) {
-      sdfPtr_->~SignedDistanceField();
-      new (sdfPtr_.get()) grid_map::SignedDistanceField(*stagedSdf_);
-    }
+    *sdfPtr_ = signedDistanceField_;
   }
 }
 
@@ -54,15 +48,9 @@ void PlanarTerrainReceiver::planarTerrainCallback(const convex_plane_decompositi
     elevationData = elevationData.unaryExpr([=](float v) { return std::isfinite(v) ? v : inpaint; });
   }
   const float heightMargin{0.1};
-  // apt (RSL) grid_map_sdf 2.0.1 API: default-construct then calculate.
-  // Original (ANYbotics master) used SignedDistanceField(gridMap, layer, dataMin - heightMargin,
-  // dataMax + 3*heightMargin), an explicit absolute [min, max] Z range. The apt version derives the
-  // lower bound from the data's min and only takes a clearance above the data's max, so we pass the
-  // clearance that reproduces the original upper bound (3*heightMargin above dataMax). The original
-  // lower bound extended one heightMargin below dataMin; the apt version starts exactly at dataMin,
-  // so the SDF grid is one margin shorter at the bottom. See edit.md "待验证项" for the behavioral note.
-  stagedSdf_ = std::make_unique<grid_map::SignedDistanceField>();
-  stagedSdf_->calculateSignedDistanceField(planarTerrain_.gridMap, sdfElevationLayer_, 3 * heightMargin);
+  const float minValue{elevationData.minCoeffOfFinites() - heightMargin};
+  const float maxValue{elevationData.maxCoeffOfFinites() + 3 * heightMargin};
+  signedDistanceField_ = grid_map::SignedDistanceField(planarTerrain_.gridMap, sdfElevationLayer_, minValue, maxValue);
 }
 
 }  // namespace legged

@@ -35,11 +35,7 @@ class PlanarTerrainReceiver : public SolverSynchronizedModule {
   rclcpp::Node::SharedPtr node_;
   rclcpp::Subscription<convex_plane_decomposition_msgs::msg::PlanarTerrain>::SharedPtr subscriber_;
   convex_plane_decomposition::PlanarTerrain planarTerrain_;
-  // apt (RSL) grid_map_sdf 2.0.1's SignedDistanceField has a deleted copy-assignment operator
-  // (it holds a const member), unlike the ANYbotics master version this code was written against.
-  // We therefore stage the freshly computed SDF in a unique_ptr buffer and copy-construct it
-  // in place into the shared object (see PlanarTerrainReceiver.cpp) instead of assigning.
-  std::unique_ptr<grid_map::SignedDistanceField> stagedSdf_;
+  grid_map::SignedDistanceField signedDistanceField_;
 
   std::string sdfElevationLayer_;
 
