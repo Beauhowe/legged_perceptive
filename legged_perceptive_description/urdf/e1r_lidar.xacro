@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot name="lidar" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <material name="blue"><color rgba="0 0 1 1"/></material>
+
+    <!-- 矩形视场 GPU 雷达：水平 120° × 垂直 90°，角分辨率水平/垂直均为 1.25° → 96×72 线束，最大量程 75 m -->
+    <xacro:macro name="lidar" params="parent_link:=lidar_link name_prefix:=mid360
+                  h_fov_deg:=120 v_fov_deg:=90 angular_resolution_deg:=1.25 max_range:=75.0">
+
+        <xacro:property name="h_half_rad" value="${h_fov_deg / 2.0 * 3.1415926535897931 / 180.0}"/>
+        <xacro:property name="v_half_rad" value="${v_fov_deg / 2.0 * 3.1415926535897931 / 180.0}"/>
+        <xacro:property name="h_samples" value="${h_fov_deg / angular_resolution_deg}"/>
+        <xacro:property name="vertical_lines" value="${v_fov_deg / angular_resolution_deg}"/>
+
+        <link name="${name_prefix}_lidar_link">
+            <visual><geometry><box size="0.03 0.02 0.04"/></geometry></visual>
+        </link>
+
+        <joint name="${name_prefix}_to_lidar" type="fixed">
+            <parent link="${parent_link}"/>
+            <child link="${name_prefix}_lidar_link"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </joint>
+
+        <gazebo reference="${name_prefix}_lidar_link">
+            <sensor name="${name_prefix}_gpu_lidar" type='gpu_lidar'>
+                <pose>0 0 0 0 0 0</pose>
+                <topic>${name_prefix}/lidar</topic>
+                <update_rate>10</update_rate>
+                <ray>
+                    <scan>
+                        <horizontal>
+                            <samples>${int(h_samples)}</samples>
+                            <resolution>1</resolution>
+                            <min_angle>${-h_half_rad}</min_angle>
+                            <max_angle>${h_half_rad}</max_angle>
+                        </horizontal>
+                        <vertical>
+                            <samples>${int(vertical_lines)}</samples>
+                            <resolution>1</resolution>
+                            <min_angle>${-v_half_rad}</min_angle>
+                            <max_angle>${v_half_rad}</max_angle>
+                        </vertical>
+                    </scan>
+                    <range>
+                        <min>0.1</min>
+                        <max>${max_range}</max>
+                        <resolution>0.01</resolution>
+                    </range>
+                </ray>
+                <always_on>1</always_on>
+                <visualize>false</visualize>
+            </sensor>
+        </gazebo>
+
+    </xacro:macro>
+</robot>
