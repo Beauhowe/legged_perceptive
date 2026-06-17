@@ -58,7 +58,7 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
     // Base Z Position
     centroidal_model::getBasePose(state, info_)(2) =
         map.atPosition("smooth_planar", pos) + comHeight_ ;/// cos(centroidal_model::getBasePose(state, info_)(4));
-
+    
     newTargetTrajectories.timeTrajectory.push_back(time);
     newTargetTrajectories.stateTrajectory.push_back(state);
     newTargetTrajectories.inputTrajectory.push_back(input);

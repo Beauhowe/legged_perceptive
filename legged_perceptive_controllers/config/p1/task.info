@@ -139,7 +139,7 @@ mpc
   debugPrint                      false
 
   mpcDesiredFrequency             100  ; [Hz]
-  mrtDesiredFrequency             500 ; [Hz] Must match controller_manager update_rate
+  mrtDesiredFrequency             1000 ; [Hz] Must match controller_manager update_rate
 }
 
 initialState
