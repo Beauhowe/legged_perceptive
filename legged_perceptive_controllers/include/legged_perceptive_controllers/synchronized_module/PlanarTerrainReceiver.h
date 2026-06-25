@@ -22,7 +22,7 @@ class PlanarTerrainReceiver : public SolverSynchronizedModule {
  public:
   PlanarTerrainReceiver(rclcpp::Node::SharedPtr node, std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr,
                         std::shared_ptr<grid_map::SignedDistanceField> signedDistanceFieldPtr, const std::string& mapTopic,
-                        std::string elevationLayer);
+                        std::string preferredSdfLayer);
 
   void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t& currentState,
                     const ReferenceManagerInterface& referenceManager) override;
@@ -37,7 +37,7 @@ class PlanarTerrainReceiver : public SolverSynchronizedModule {
   convex_plane_decomposition::PlanarTerrain planarTerrain_;
   grid_map::SignedDistanceField signedDistanceField_;
 
-  std::string sdfElevationLayer_;
+  std::string sdfElevationLayer_;  // preferred layer; falls back to smooth_planar, elevation_before_postprocess, elevation
 
   std::mutex mutex_;
   std::atomic_bool updated_;

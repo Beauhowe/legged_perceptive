@@ -19,6 +19,7 @@
     <depend>legged_controllers</depend>
     <depend>convex_plane_decomposition_msgs</depend>
     <depend>convex_plane_decomposition_ros</depend>
+    <exec_depend>elevation_mapping_ros2</exec_depend>
     <depend>grid_map_ros</depend>
     <depend>grid_map_msgs</depend>
     <depend>grid_map_sdf</depend>

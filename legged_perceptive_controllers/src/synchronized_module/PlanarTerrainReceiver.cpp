@@ -10,6 +10,30 @@
 
 namespace legged {
 
+namespace {
+
+constexpr const char* kSmoothPlanarLayer = "smooth_planar";
+constexpr const char* kElevationBeforePostprocessLayer = "elevation_before_postprocess";
+constexpr const char* kElevationLayer = "elevation";
+
+std::string resolveSdfLayer(const grid_map::GridMap& map, const std::string& preferred) {
+  if (!preferred.empty() && map.exists(preferred)) {
+    return preferred;
+  }
+  if (map.exists(kSmoothPlanarLayer)) {
+    return kSmoothPlanarLayer;
+  }
+  if (map.exists(kElevationBeforePostprocessLayer)) {
+    return kElevationBeforePostprocessLayer;
+  }
+  if (map.exists(kElevationLayer)) {
+    return kElevationLayer;
+  }
+  return {};
+}
+
+}  // namespace
+
 PlanarTerrainReceiver::PlanarTerrainReceiver(rclcpp::Node::SharedPtr node,
                                              std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr,
                                              std::shared_ptr<grid_map::SignedDistanceField> signedDistanceFieldPtr,
@@ -37,20 +61,36 @@ void PlanarTerrainReceiver::preSolverRun(scalar_t /*initTime*/, scalar_t /*final
 
 void PlanarTerrainReceiver::planarTerrainCallback(const convex_plane_decomposition_msgs::msg::PlanarTerrain::ConstSharedPtr& msg) {
   std::lock_guard<std::mutex> lock(mutex_);
-  updated_ = true;
 
   planarTerrain_ = convex_plane_decomposition::PlanarTerrain(convex_plane_decomposition::fromMessage(*msg));
 
-  auto& elevationData = planarTerrain_.gridMap.get(sdfElevationLayer_);
+  const std::string sdfLayer = resolveSdfLayer(planarTerrain_.gridMap, sdfElevationLayer_);
+  if (sdfLayer.empty()) {
+    RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 2000,
+                         "[PlanarTerrainReceiver] planar_terrain has no usable SDF layer "
+                         "(tried preferred='%s', smooth_planar, elevation_before_postprocess, elevation)",
+                         sdfElevationLayer_.c_str());
+    return;
+  }
+
+  auto& elevationData = planarTerrain_.gridMap.get(sdfLayer);
+  if (!elevationData.array().isFinite().any()) {
+    RCLCPP_WARN_THROTTLE(node_->get_logger(), *node_->get_clock(), 2000,
+                         "[PlanarTerrainReceiver] Layer '%s' has no finite values; skipping terrain update", sdfLayer.c_str());
+    return;
+  }
+
   if (elevationData.hasNaN()) {
     const float inpaint{elevationData.minCoeffOfFinites()};
     RCLCPP_WARN(node_->get_logger(), "[PlanarTerrainReceiver] Map contains NaN values. Will apply inpainting with min value.");
     elevationData = elevationData.unaryExpr([=](float v) { return std::isfinite(v) ? v : inpaint; });
   }
+
   const float heightMargin{0.1};
   const float minValue{elevationData.minCoeffOfFinites() - heightMargin};
   const float maxValue{elevationData.maxCoeffOfFinites() + 3 * heightMargin};
-  signedDistanceField_ = grid_map::SignedDistanceField(planarTerrain_.gridMap, sdfElevationLayer_, minValue, maxValue);
+  signedDistanceField_ = grid_map::SignedDistanceField(planarTerrain_.gridMap, sdfLayer, minValue, maxValue);
+  updated_ = true;
 }
 
 }  // namespace legged

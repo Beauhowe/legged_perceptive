@@ -37,7 +37,7 @@ void PerceptiveController::setupMpc() {
   auto planarTerrainReceiver = std::make_shared<PlanarTerrainReceiver>(
       rosNode_, dynamic_cast<PerceptiveLeggedInterface&>(*leggedInterface_).getPlanarTerrainPtr(),
       dynamic_cast<PerceptiveLeggedInterface&>(*leggedInterface_).getSignedDistanceFieldPtr(),
-      "/convex_plane_decomposition_ros/planar_terrain", "elevation");
+      "/convex_plane_decomposition_ros/planar_terrain", "smooth_planar");
   mpc_->getSolverPtr()->addSynchronizedModule(planarTerrainReceiver);
 }
 

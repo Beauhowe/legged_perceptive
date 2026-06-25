@@ -317,4 +317,24 @@ kalmanFilter
     footSensorNoisePosition     0.005
     footSensorNoiseVelocity     0.1
     footHeightSensorNoise       0.01
+
+    ; External odometry (e.g. FAST_LIO): fuse height only with fixed R_z and innovation gating.
+    externalOdomEnable          false
+    externalOdomTopic           /Odometry
+    externalOdomPosNoiseZ       0.017
+    externalOdomPosGate           3.84
+    externalOdomMaxAge            0.2
+    externalOdomTimeout           0.5
+
+    ; Terrain map height: z_meas = elevation(x,y) + comHeight (same source as perceptive MPC).
+    terrainHeightEnable         true
+    terrainTopic                /convex_plane_decomposition_ros/planar_terrain
+    terrainHeightLayer          smooth_planar
+    terrainHeightFallbackLayer  elevation
+    terrainComHeight            0.58
+    terrainPosNoiseZ            0.03
+    terrainPosGate              3.84
 }
+
+; Controller settings
+enableCsvLogging                               true

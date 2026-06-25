@@ -13,8 +13,7 @@
     <exec_depend>xacro</exec_depend>
     <exec_depend>robot_state_publisher</exec_depend>
     <exec_depend>gazebo_ros</exec_depend>
-    <!-- realsense2_description / realsense2_camera / livox_ros_driver2 are not in this
-         environment; they are only needed for the hardware launch files. -->
+    <!-- D435 visual mesh is bundled under meshes/; realsense2_description is optional. -->
 
     <export>
         <build_type>ament_cmake</build_type>
