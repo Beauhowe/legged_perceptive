@@ -332,7 +332,7 @@ kalmanFilter
     terrainHeightLayer          smooth_planar
     terrainHeightFallbackLayer  elevation
     terrainComHeight            0.58
-    terrainPosNoiseZ            0.03
+    terrainPosNoiseZ            0.04
     terrainPosGate              3.84
 }
 
