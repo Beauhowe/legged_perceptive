@@ -2,7 +2,7 @@
 
 ## [added]
 
-- `legged_perceptive_controllers/config/p1/task.info`：`kalmanFilter` 段新增外部里程计高度融合参数（`externalOdomEnable` / `externalOdomTopic` / `externalOdomPosNoiseZ` / `externalOdomPosGate` / `externalOdomMaxAge` / `externalOdomTimeout`，默认关闭，话题 `/Odometry`）
+- `legged_perceptive_controllers/config/p1/task.info`：`kalmanFilter` 段新增外部里程计位置融合参数（`externalOdomEnable` / `externalOdomTopic` / `externalOdomPosNoiseX` / `externalOdomPosNoiseY` / `externalOdomPosNoiseZ` / `externalOdomPosGate` / `externalOdomMaxAge` / `externalOdomTimeout`，话题 `/Odometry`）
 - `legged_perceptive_controllers/config/p1/task.info`：`kalmanFilter` 段新增地形图高度融合参数（`terrainHeightEnable` / `terrainTopic` / `terrainHeightLayer` / `terrainHeightFallbackLayer` / `terrainComHeight` / `terrainPosNoiseZ` / `terrainPosGate`，默认开启，与感知 MPC 共用 `planar_terrain`）
 - `legged_perceptive_controllers/config/p1/task.info`：新增 `enableCsvLogging=true`
 - `PlanarTerrainReceiver`：新增 `resolveSdfLayer()`，按首选图层 → `smooth_planar` → `elevation_before_postprocess` → `elevation` 自动回退

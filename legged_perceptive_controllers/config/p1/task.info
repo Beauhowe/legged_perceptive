@@ -318,19 +318,35 @@ kalmanFilter
     footSensorNoiseVelocity     0.1
     footHeightSensorNoise       0.01
 
-    ; External odometry (e.g. FAST_LIO): fuse height only with fixed R_z and innovation gating.
-    externalOdomEnable          false
-    externalOdomTopic           /Odometry
-    externalOdomPosNoiseZ       0.017
-    externalOdomPosGate           3.84
-    externalOdomMaxAge            0.2
-    externalOdomTimeout           0.5
+    ; External odometry (e.g. FAST_LIO): use /Odometry to correct the EKF base position.
+    ; The current mode is ROS1-style direct override: transform external odom into the EKF odom frame,
+    ; compute odom->base with the fixed base->sensor extrinsic below, then overwrite xHat position.
+    externalOdomEnable          true      ; Subscribe to externalOdomTopic and run external odom update.
+    externalOdomTopic           /Odometry ; External odometry topic. FAST_LIO publishes header.frame_id=camera_init, child_frame_id=_body.
+    externalOdomPosNoiseX       0.01      ; Position covariance used after override/fusion, in meters.
+    externalOdomPosNoiseY       0.01      ; Smaller values mean the EKF keeps higher confidence in external odom x/y.
+    externalOdomPosNoiseZ       0.005     ; Smaller z noise makes external odom height dominate more strongly.
+    externalOdomPosGate         7.815     ; 3D chi-square innovation gate, 95% threshold; used by non-direct fusion paths.
+    externalOdomPositionOverride false    ; Legacy strong mode: fuse first, then set xHat position to the measured base position.
+    externalOdomTfOdomOverride true       ; Current mode: transform /Odometry frame into odom via TF and directly overwrite xHat position.
+    externalOdomUseTfTransform  false     ; Old TF fusion mode switch. Ignored when externalOdomTfOdomOverride is true.
+    externalOdomUseManualBaseSensorTransform true ; Use the fixed base->sensor extrinsic below instead of looking up base->child_frame_id.
+    externalOdomBaseToSensorX   0.0     ; Fixed base->sensor translation x [m]. Match the sensor/body used by /Odometry.
+    externalOdomBaseToSensorY   0.000     ; Fixed base->sensor translation y [m].
+    externalOdomBaseToSensorZ   0.00      ; Fixed base->sensor translation z [m].
+    externalOdomBaseToSensorRoll 0.000    ; Fixed base->sensor roll [rad].
+    externalOdomBaseToSensorPitch 0.00    ; Fixed base->sensor pitch [rad].
+    externalOdomBaseToSensorYaw 0.000     ; Fixed base->sensor yaw [rad].
+    externalOdomMaxAge          0.33      ; Reject /Odometry messages older than this [s].
+    externalOdomTimeout         0.5       ; Warn/reject if no accepted external odom has arrived for this long [s].
 
     ; Terrain map height: z_meas = elevation(x,y) + comHeight (same source as perceptive MPC).
-    terrainHeightEnable         true
+    terrainHeightEnable         false
     terrainTopic                /convex_plane_decomposition_ros/planar_terrain
     terrainHeightLayer          smooth_planar
     terrainHeightFallbackLayer  elevation
+    ; mpc_reference_base_z auto
+    terrainHeightSource         mpc_reference_base_z
     terrainComHeight            0.58
     terrainPosNoiseZ            0.04
     terrainPosGate              3.84
