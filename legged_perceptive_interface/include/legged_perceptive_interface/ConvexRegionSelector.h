@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include <ocs2_core/reference/ModeSchedule.h>
 
 #include <convex_plane_decomposition/PlanarRegion.h>
@@ -20,6 +22,15 @@ using namespace legged_robot;
 
 class ConvexRegionSelector {
  public:
+  struct FootPlacement {
+    scalar_t middleTime{0.0};
+    vector3_t projectionNormal{vector3_t::Zero()};
+    vector3_t positionInWorld{vector3_t::Zero()};
+    Eigen::Isometry3d transformPlaneToWorld{Eigen::Isometry3d::Identity()};
+    convex_plane_decomposition::CgalPolygon2d convexRegion;
+    vector3_t nominalFoothold{vector3_t::Zero()};
+  };
+
   ConvexRegionSelector(CentroidalModelInfo info, std::shared_ptr<convex_plane_decomposition::PlanarTerrain> PlanarTerrainPtr,
                        const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t numVertices);
 
@@ -31,13 +42,15 @@ class ConvexRegionSelector {
 
   vector3_t getNominalFootholds(size_t leg, scalar_t time) const;
 
-  std::vector<scalar_t> getMiddleTimes(size_t leg) const { return middleTimes_[leg]; }
+  std::vector<scalar_t> getMiddleTimes(size_t leg) const;
 
-  std::vector<convex_plane_decomposition::PlanarTerrainProjection> getProjections(size_t leg) { return feetProjections_[leg]; }
+  std::vector<convex_plane_decomposition::PlanarTerrainProjection> getProjections(size_t leg) const;
+
+  std::vector<FootPlacement> getFootPlacements(size_t leg) const;
 
   std::shared_ptr<convex_plane_decomposition::PlanarTerrain> getPlanarTerrainPtr() { return planarTerrainPtr_; }
 
-  feet_array_t<scalar_t> getInitStandFinalTimes() { return initStandFinalTime_; }
+  feet_array_t<scalar_t> getInitStandFinalTimes() const;
 
   feet_array_t<std::vector<bool>> extractContactFlags(const std::vector<size_t>& phaseIDsStock) const;
 
@@ -62,5 +75,7 @@ class ConvexRegionSelector {
   convex_plane_decomposition::PlanarTerrain planarTerrain_;
   std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
+
+  mutable std::mutex mutex_;
 };
 }  // namespace legged

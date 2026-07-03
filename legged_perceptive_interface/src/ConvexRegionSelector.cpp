@@ -9,6 +9,8 @@
 
 #include <convex_plane_decomposition/ConvexRegionGrowing.h>
 
+#include <algorithm>
+
 namespace legged {
 ConvexRegionSelector::ConvexRegionSelector(CentroidalModelInfo info,
                                            std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr,
@@ -19,22 +21,66 @@ ConvexRegionSelector::ConvexRegionSelector(CentroidalModelInfo info,
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()) {}
 
 convex_plane_decomposition::PlanarTerrainProjection ConvexRegionSelector::getProjection(size_t leg, scalar_t time) const {
+  std::lock_guard<std::mutex> lock(mutex_);
   const auto index = lookup::findIndexInTimeArray(timeEvents_[leg], time);
   return feetProjections_[leg][index];
 }
 
 convex_plane_decomposition::CgalPolygon2d ConvexRegionSelector::getConvexPolygon(size_t leg, scalar_t time) const {
+  std::lock_guard<std::mutex> lock(mutex_);
   const auto index = lookup::findIndexInTimeArray(timeEvents_[leg], time);
   return convexPolygons_[leg][index];
 }
 
 vector3_t ConvexRegionSelector::getNominalFootholds(size_t leg, scalar_t time) const {
+  std::lock_guard<std::mutex> lock(mutex_);
   const auto index = lookup::findIndexInTimeArray(timeEvents_[leg], time);
   return nominalFootholds_[leg][index];
 }
 
+std::vector<scalar_t> ConvexRegionSelector::getMiddleTimes(size_t leg) const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return middleTimes_[leg];
+}
+
+std::vector<convex_plane_decomposition::PlanarTerrainProjection> ConvexRegionSelector::getProjections(size_t leg) const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return feetProjections_[leg];
+}
+
+std::vector<ConvexRegionSelector::FootPlacement> ConvexRegionSelector::getFootPlacements(size_t leg) const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<FootPlacement> footPlacements;
+  footPlacements.reserve(middleTimes_[leg].size());
+
+  for (const auto middleTime : middleTimes_[leg]) {
+    const auto index = lookup::findIndexInTimeArray(timeEvents_[leg], middleTime);
+    const auto& projection = feetProjections_[leg][index];
+    if (projection.regionPtr == nullptr) {
+      continue;
+    }
+
+    FootPlacement footPlacement;
+    footPlacement.middleTime = middleTime;
+    footPlacement.projectionNormal = projection.regionPtr->transformPlaneToWorld.linear() * vector3_t(0, 0, 0.1);
+    footPlacement.positionInWorld = projection.positionInWorld;
+    footPlacement.transformPlaneToWorld = projection.regionPtr->transformPlaneToWorld;
+    footPlacement.convexRegion = convexPolygons_[leg][index];
+    footPlacement.nominalFoothold = nominalFootholds_[leg][index];
+    footPlacements.push_back(std::move(footPlacement));
+  }
+
+  return footPlacements;
+}
+
+feet_array_t<scalar_t> ConvexRegionSelector::getInitStandFinalTimes() const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return initStandFinalTime_;
+}
+
 void ConvexRegionSelector::update(const ModeSchedule& modeSchedule, scalar_t initTime, const vector_t& initState,
                                   TargetTrajectories& targetTrajectories) {
+  std::lock_guard<std::mutex> lock(mutex_);
   planarTerrain_ = *planarTerrainPtr_;  // Need copy storage it since PlanarTerrainProjection.regionPtr is a pointer
   const auto& modeSequence = modeSchedule.modeSequence;
   const auto& eventTimes = modeSchedule.eventTimes;
@@ -122,7 +168,7 @@ feet_array_t<std::vector<bool>> ConvexRegionSelector::extractContactFlags(const 
 }
 
 std::pair<int, int> ConvexRegionSelector::findIndex(size_t index, const std::vector<bool>& contactFlagStock) {
-  const size_t numPhases = contactFlagStock.size();
+  const int numPhases = static_cast<int>(contactFlagStock.size());
 
   if (!contactFlagStock[index]) {
     return {0, 0};
@@ -130,15 +176,15 @@ std::pair<int, int> ConvexRegionSelector::findIndex(size_t index, const std::vec
 
   // find the starting time
   int startTimesIndex = 0;
-  for (int ip = index - 1; ip >= 0; ip--) {
+  for (int ip = static_cast<int>(index) - 1; ip >= 0; ip--) {
     if (!contactFlagStock[ip]) {
       startTimesIndex = ip;
       break;
     }
   }
   // find the final time
-  int finalTimesIndex = numPhases - 2;
-  for (size_t ip = index + 1; ip < numPhases; ip++) {
+  int finalTimesIndex = std::max(0, numPhases - 1);
+  for (int ip = static_cast<int>(index) + 1; ip < numPhases; ip++) {
     if (!contactFlagStock[ip]) {
       finalTimesIndex = ip - 1;
       break;

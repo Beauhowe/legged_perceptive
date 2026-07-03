@@ -29,23 +29,18 @@ void FootPlacementVisualization::update(const SystemObservation& observation) {
 
     size_t i = 0;
     for (int leg = 0; leg < numFoot_; ++leg) {
-      auto middleTimes = convexRegionSelector_.getMiddleTimes(leg);
+      const auto footPlacements = convexRegionSelector_.getFootPlacements(leg);
 
       int kStart = 0;
-      for (int k = 0; k < middleTimes.size(); ++k) {
-        const auto projection = convexRegionSelector_.getProjection(leg, middleTimes[k]);
-        if (projection.regionPtr == nullptr) {
-          continue;
-        }
-        if (middleTimes[k] < observation.time) {
+      for (int k = 0; k < footPlacements.size(); ++k) {
+        if (footPlacements[k].middleTime < observation.time) {
           kStart = k + 1;
           continue;
         }
         auto color = feetColorMap_[leg];
-        float alpha = 1 - static_cast<float>(k - kStart) / static_cast<float>(middleTimes.size() - kStart);
+        float alpha = 1 - static_cast<float>(k - kStart) / static_cast<float>(footPlacements.size() - kStart);
         // Projections
-        auto projectionMaker = getArrowAtPointMsg(projection.regionPtr->transformPlaneToWorld.linear() * vector3_t(0, 0, 0.1),
-                                                  projection.positionInWorld, color);
+        auto projectionMaker = getArrowAtPointMsg(footPlacements[k].projectionNormal, footPlacements[k].positionInWorld, color);
         projectionMaker.header = header;
         projectionMaker.ns = "Projections";
         projectionMaker.id = i;
@@ -53,14 +48,11 @@ void FootPlacementVisualization::update(const SystemObservation& observation) {
         makerArray.markers.push_back(projectionMaker);
 
         // Convex Region
-        const auto convexRegion = convexRegionSelector_.getConvexPolygon(leg, middleTimes[k]);
-        auto convexRegionMsg =
-            convex_plane_decomposition::to3dRosPolygon(convexRegion, projection.regionPtr->transformPlaneToWorld, header);
-        makerArray.markers.push_back(to3dRosMarker(convexRegion, projection.regionPtr->transformPlaneToWorld, header, color, alpha, i));
+        makerArray.markers.push_back(to3dRosMarker(footPlacements[k].convexRegion, footPlacements[k].transformPlaneToWorld, header, color,
+                                                   alpha, i));
 
         // Nominal Footholds
-        const auto nominal = convexRegionSelector_.getNominalFootholds(leg, middleTimes[k]);
-        auto nominalMarker = getFootMarker(nominal, true, color, footMarkerDiameter_, 1.);
+        auto nominalMarker = getFootMarker(footPlacements[k].nominalFoothold, true, color, footMarkerDiameter_, 1.);
         nominalMarker.header = header;
         nominalMarker.ns = "Nominal Footholds";
         nominalMarker.id = i;
