@@ -42,8 +42,8 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
 
   std::string layer = "elevation_before_postprocess";
   planarTerrainPtr_->gridMap.setGeometry(grid_map::Length(5.0, 5.0), 0.03);
-  planarTerrainPtr_->gridMap.add(layer, 0);
-  planarTerrainPtr_->gridMap.add("smooth_planar", 0);
+  planarTerrainPtr_->gridMap.add(layer, 0.0);
+  planarTerrainPtr_->gridMap.add("smooth_planar", 0.0);
   signedDistanceFieldPtr_ = std::make_shared<grid_map::SignedDistanceField>(planarTerrainPtr_->gridMap, layer, -0.1, 0.1);
 
   LeggedInterface::setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);

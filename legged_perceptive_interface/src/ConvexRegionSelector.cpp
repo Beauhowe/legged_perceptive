@@ -195,7 +195,7 @@ std::pair<int, int> ConvexRegionSelector::findIndex(size_t index, const std::vec
 
 vector3_t ConvexRegionSelector::getNominalFoothold(size_t leg, scalar_t time, const vector_t& initState,
                                                    TargetTrajectories& targetTrajectories) {
-  scalar_t height = 0.4;
+  scalar_t height = 0.5;
 
   vector_t desiredState = targetTrajectories.getDesiredState(time);
   vector3_t desiredVel = centroidal_model::getNormalizedMomentum(desiredState, info_).head(3);

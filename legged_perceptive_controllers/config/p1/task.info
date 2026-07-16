@@ -138,8 +138,8 @@ mpc
 
   debugPrint                      false
 
-  mpcDesiredFrequency             100  ; [Hz]
-  mrtDesiredFrequency             1000 ; [Hz] Must match controller_manager update_rate
+  mpcDesiredFrequency             60  ; [Hz]
+  mrtDesiredFrequency             500 ; [Hz] Must match controller_manager update_rate
 }
 
 initialState
@@ -317,6 +317,7 @@ kalmanFilter
     footSensorNoisePosition     0.005
     footSensorNoiseVelocity     0.1
     footHeightSensorNoise       0.01
+    zeroInitialYaw              false
 
     ; External odometry (e.g. FAST_LIO): use /Odometry to correct the EKF base position.
     ; The current mode is ROS1-style direct override: transform external odom into the EKF odom frame,
