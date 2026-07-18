@@ -3,10 +3,13 @@
 //
 #include <utility>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
 #include "legged_perceptive_interface/PerceptiveLeggedReferenceManager.h"
+#include "legged_perceptive_interface/TargetTrajectoryResampler.h"
 
 namespace legged {
 
@@ -25,16 +28,23 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
                                                         TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
   const auto timeHorizon = finalTime - initTime;
   modeSchedule = getGaitSchedule()->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
+  bool hasDynamicPhase = false;
+  for (const auto mode : modeSchedule.modeSequence) {
+    hasDynamicPhase = hasDynamicPhase || mode != ModeNumber::STANCE;
+  }
+  if (!hasDynamicPhase) {
+    dynamicGaitDiagnosticLogged_ = false;
+  }
 
-  TargetTrajectories newTargetTrajectories;
-  int nodeNum = 11;
+  TargetTrajectories newTargetTrajectories =
+      resampleTargetTrajectories(targetTrajectories, initTime, finalTime, 11);
+  const size_t nodeNum = newTargetTrajectories.timeTrajectory.size();
   for (size_t i = 0; i < nodeNum; ++i) {
-    scalar_t time = initTime + static_cast<double>(i) * timeHorizon / (nodeNum - 1);
-    vector_t state = targetTrajectories.getDesiredState(time);
-    vector_t input = targetTrajectories.getDesiredState(time);
+    const scalar_t time = newTargetTrajectories.timeTrajectory[i];
+    vector_t& state = newTargetTrajectories.stateTrajectory[i];
 
     const auto& map = convexRegionSelectorPtr_->getPlanarTerrainPtr()->gridMap;
-    vector_t pos = centroidal_model::getBasePose(state, info_).head(3);
+    const grid_map::Position pos = centroidal_model::getBasePose(state, info_).head<2>();
 
     // Base Orientation
     scalar_t step = 0.3;
@@ -58,15 +68,54 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
     // Base Z Position
     centroidal_model::getBasePose(state, info_)(2) =
         map.atPosition("smooth_planar", pos) + comHeight_ ;/// cos(centroidal_model::getBasePose(state, info_)(4));
-    
-    newTargetTrajectories.timeTrajectory.push_back(time);
-    newTargetTrajectories.stateTrajectory.push_back(state);
-    newTargetTrajectories.inputTrajectory.push_back(input);
   }
   targetTrajectories = newTargetTrajectories;
 
   // Footstep
   convexRegionSelectorPtr_->update(modeSchedule, initTime, initState, targetTrajectories);
+
+  if (hasDynamicPhase && !dynamicGaitDiagnosticLogged_) {
+    std::ostringstream log;
+    log << "[PerceptiveDiag] dynamic gait snapshot: init=" << initTime << " final=" << finalTime << " modes=[";
+    for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
+      log << (i == 0 ? "" : ",") << modeSchedule.modeSequence[i];
+    }
+    log << "] events=[";
+    for (size_t i = 0; i < modeSchedule.eventTimes.size(); ++i) {
+      log << (i == 0 ? "" : ",") << modeSchedule.eventTimes[i];
+    }
+    log << "] init_state_finite=" << initState.allFinite();
+
+    if (!targetTrajectories.stateTrajectory.empty()) {
+      const auto& firstState = targetTrajectories.stateTrajectory.front();
+      const auto& lastState = targetTrajectories.stateTrajectory.back();
+      log << " target_state_finite=" << (firstState.allFinite() && lastState.allFinite())
+          << " first_base=" << centroidal_model::getBasePose(firstState, info_).transpose()
+          << " last_base=" << centroidal_model::getBasePose(lastState, info_).transpose();
+    }
+    if (!targetTrajectories.inputTrajectory.empty()) {
+      const auto& firstInput = targetTrajectories.inputTrajectory.front();
+      const auto& lastInput = targetTrajectories.inputTrajectory.back();
+      log << " input_dims=" << firstInput.size() << "," << lastInput.size()
+          << " input_finite=" << (firstInput.allFinite() && lastInput.allFinite())
+          << " input_norms=" << firstInput.norm() << "," << lastInput.norm();
+    }
+
+    const auto contactFlags = convexRegionSelectorPtr_->extractContactFlags(modeSchedule.modeSequence);
+    for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
+      const auto projections = convexRegionSelectorPtr_->getProjections(leg);
+      log << "\n  leg=" << leg << " flags=";
+      for (const auto flag : contactFlags[leg]) {
+        log << (flag ? '1' : '0');
+      }
+      log << " projections=" << projections.size();
+      for (size_t phase = 0; phase < projections.size(); ++phase) {
+        log << " p" << phase << "=" << projections[phase].positionInWorld.transpose();
+      }
+    }
+    std::cerr << log.str() << std::endl;
+    dynamicGaitDiagnosticLogged_ = true;
+  }
 
   // Swing trajectory
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
@@ -81,6 +130,9 @@ void PerceptiveLeggedReferenceManager::updateSwingTrajectoryPlanner(scalar_t ini
     size_t initIndex = lookup::findIndexInTimeArray(modeSchedule.eventTimes, initTime);
 
     auto projections = convexRegionSelectorPtr_->getProjections(leg);
+    if (contactFlagStocks[leg].size() != projections.size() || projections.empty() || initIndex >= projections.size()) {
+      throw std::invalid_argument("[PerceptiveLeggedReferenceManager] Invalid contact/projection phase data.");
+    }
     modifyProjections(initTime, initState, leg, initIndex, contactFlagStocks[leg], projections);
 
     scalar_array_t liftOffHeights, touchDownHeights;
@@ -94,9 +146,13 @@ void PerceptiveLeggedReferenceManager::updateSwingTrajectoryPlanner(scalar_t ini
 void PerceptiveLeggedReferenceManager::modifyProjections(scalar_t initTime, const vector_t& initState, size_t leg, size_t initIndex,
                                                          const std::vector<bool>& contactFlagStocks,
                                                          std::vector<convex_plane_decomposition::PlanarTerrainProjection>& projections) {
+  if (initIndex >= contactFlagStocks.size() || contactFlagStocks.size() != projections.size()) {
+    throw std::invalid_argument("[PerceptiveLeggedReferenceManager] Invalid projection phase index.");
+  }
   if (contactFlagStocks[initIndex]) {
     lastLiftoffPos_[leg] = endEffectorKinematicsPtr_->getPosition(initState)[leg];
     lastLiftoffPos_[leg].z() -= 0.02;
+    lastLiftoffPosValid_[leg] = true;
     for (int i = initIndex; i < projections.size(); ++i) {
       if (!contactFlagStocks[i]) {
         break;
@@ -112,10 +168,10 @@ void PerceptiveLeggedReferenceManager::modifyProjections(scalar_t initTime, cons
   }
   if (initTime > convexRegionSelectorPtr_->getInitStandFinalTimes()[leg]) {
     for (int i = initIndex; i >= 0; --i) {
-      if (contactFlagStocks[i]) {
+      if (contactFlagStocks[i] && lastLiftoffPosValid_[leg]) {
         projections[i].positionInWorld = lastLiftoffPos_[leg];
       }
-      if (!contactFlagStocks[i] && !contactFlagStocks[i + 1]) {
+      if (!contactFlagStocks[i] && (i + 1 >= static_cast<int>(contactFlagStocks.size()) || !contactFlagStocks[i + 1])) {
         break;
       }
     }

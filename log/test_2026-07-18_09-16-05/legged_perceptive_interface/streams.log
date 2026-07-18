@@ -1,0 +1,68 @@
+[0.016s] Invoking command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface': AMENT_PREFIX_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface/lib:${LD_LIBRARY_PATH} /usr/bin/ctest -C Release -D ExperimentalTest --no-compress-output -V --force-new-ctest-process
+[0.021s] UpdateCTestConfiguration  from :/workspace/src/legged_perceptive/build/legged_perceptive_interface/CTestConfiguration.ini
+[0.021s] Parse Config file:/workspace/src/legged_perceptive/build/legged_perceptive_interface/CTestConfiguration.ini
+[0.021s]    Site: beauhowe-System-Product-Name
+[0.021s]    Build name: (empty)
+[0.021s]  Add coverage exclude regular expressions.
+[0.021s] Create new tag: 20260718-0916 - Experimental
+[0.021s] UpdateCTestConfiguration  from :/workspace/src/legged_perceptive/build/legged_perceptive_interface/CTestConfiguration.ini
+[0.022s] Parse Config file:/workspace/src/legged_perceptive/build/legged_perceptive_interface/CTestConfiguration.ini
+[0.022s] Test project /workspace/src/legged_perceptive/build/legged_perceptive_interface
+[0.022s] Constructing a list of tests
+[0.022s] Done constructing a list of tests
+[0.022s] Updating test list for fixtures
+[0.022s] Added 0 tests to meet fixture requirements
+[0.022s] Checking test dependency graph...
+[0.022s] Checking test dependency graph end
+[0.022s] test 1
+[0.022s]     Start 1: test_convex_region_selector_timing
+[0.022s] 
+[0.022s] 1: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml" "--package-name" "legged_perceptive_interface" "--output-file" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/ament_cmake_gtest/test_convex_region_selector_timing.txt" "--command" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_convex_region_selector_timing" "--gtest_output=xml:/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml"
+[0.022s] 1: Test timeout computed to be: 60
+[0.056s] 1: -- run_test.py: invoking following command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface':
+[0.056s] 1:  - /workspace/src/legged_perceptive/build/legged_perceptive_interface/test_convex_region_selector_timing --gtest_output=xml:/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml
+[0.059s] 1: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+[0.059s] 1: [==========] Running 1 test from 1 test suite.
+[0.059s] 1: [----------] Global test environment set-up.
+[0.059s] 1: [----------] 1 test from ConvexRegionSelectorTiming
+[0.059s] 1: [ RUN      ] ConvexRegionSelectorTiming.FinalStanceIndexReferencesExistingEventTime
+[0.059s] 1: [       OK ] ConvexRegionSelectorTiming.FinalStanceIndexReferencesExistingEventTime (0 ms)
+[0.059s] 1: [----------] 1 test from ConvexRegionSelectorTiming (0 ms total)
+[0.060s] 1: 
+[0.060s] 1: [----------] Global test environment tear-down
+[0.060s] 1: [==========] 1 test from 1 test suite ran. (0 ms total)
+[0.060s] 1: [  PASSED  ] 1 test.
+[0.060s] 1: -- run_test.py: return code 0
+[0.060s] 1: -- run_test.py: inject classname prefix into gtest result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml'
+[0.060s] 1: -- run_test.py: verify result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml'
+[0.065s] 1/2 Test #1: test_convex_region_selector_timing ...   Passed    0.04 sec
+[0.065s] test 2
+[0.065s]     Start 2: test_perceptive_reference_manager
+[0.065s] 
+[0.065s] 2: Test command: /usr/bin/python3 "-u" "/opt/ros/humble/share/ament_cmake_test/cmake/run_test.py" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml" "--package-name" "legged_perceptive_interface" "--output-file" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/ament_cmake_gtest/test_perceptive_reference_manager.txt" "--command" "/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_perceptive_reference_manager" "--gtest_output=xml:/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml"
+[0.065s] 2: Test timeout computed to be: 60
+[0.100s] 2: -- run_test.py: invoking following command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface':
+[0.100s] 2:  - /workspace/src/legged_perceptive/build/legged_perceptive_interface/test_perceptive_reference_manager --gtest_output=xml:/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml
+[0.101s] 2: Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+[0.101s] 2: [==========] Running 1 test from 1 test suite.
+[0.101s] 2: [----------] Global test environment set-up.
+[0.101s] 2: [----------] 1 test from PerceptiveReferenceManager
+[0.101s] 2: [ RUN      ] PerceptiveReferenceManager.ResamplesInputFromInputTrajectory
+[0.101s] 2: [       OK ] PerceptiveReferenceManager.ResamplesInputFromInputTrajectory (0 ms)
+[0.101s] 2: [----------] 1 test from PerceptiveReferenceManager (0 ms total)
+[0.101s] 2: 
+[0.101s] 2: [----------] Global test environment tear-down
+[0.102s] 2: [==========] 1 test from 1 test suite ran. (0 ms total)
+[0.102s] 2: [  PASSED  ] 1 test.
+[0.102s] 2: -- run_test.py: return code 0
+[0.102s] 2: -- run_test.py: inject classname prefix into gtest result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml'
+[0.102s] 2: -- run_test.py: verify result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml'
+[0.106s] 2/2 Test #2: test_perceptive_reference_manager ....   Passed    0.04 sec
+[0.106s] 
+[0.106s] 100% tests passed, 0 tests failed out of 2
+[0.106s] 
+[0.106s] Label Time Summary:
+[0.106s] gtest    =   0.08 sec*proc (2 tests)
+[0.106s] 
+[0.106s] Total Test time (real) =   0.08 sec
+[0.109s] Invoked command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface' returned '0': AMENT_PREFIX_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface:${CMAKE_PREFIX_PATH} LD_LIBRARY_PATH=/workspace/src/legged_perceptive/install/legged_perceptive_interface/lib:${LD_LIBRARY_PATH} /usr/bin/ctest -C Release -D ExperimentalTest --no-compress-output -V --force-new-ctest-process

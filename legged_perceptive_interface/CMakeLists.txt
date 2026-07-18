@@ -19,6 +19,7 @@ add_library(${PROJECT_NAME}
   src/constraint/FootPlacementConstraint.cpp
   src/constraint/SphereSdfConstraint.cpp
   src/ConvexRegionSelector.cpp
+  src/TargetTrajectoryResampler.cpp
   src/PerceptiveLeggedReferenceManager.cpp
   src/PerceptiveLeggedPrecomputation.cpp
   src/PerceptiveLeggedInterface.cpp
@@ -76,5 +77,25 @@ ament_export_dependencies(
   Eigen3
   Boost
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(test_convex_region_selector_timing
+    test/test_convex_region_selector_timing.cpp
+  )
+  target_link_libraries(test_convex_region_selector_timing
+    ${PROJECT_NAME}
+  )
+
+  ament_add_gtest(test_perceptive_reference_manager
+    test/test_perceptive_reference_manager.cpp
+  )
+  target_link_libraries(test_perceptive_reference_manager
+    ${PROJECT_NAME}
+  )
+  target_compile_options(test_perceptive_reference_manager PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+  target_compile_options(test_convex_region_selector_timing PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+endif()
 
 ament_package()

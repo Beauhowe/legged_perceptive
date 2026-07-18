@@ -1,0 +1,19 @@
+-- run_test.py: invoking following command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface':
+ - /workspace/src/legged_perceptive/build/legged_perceptive_interface/test_convex_region_selector_timing --gtest_output=xml:/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml
+
+Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConvexRegionSelectorTiming
+[ RUN      ] ConvexRegionSelectorTiming.FinalStanceIndexReferencesExistingEventTime
+[       OK ] ConvexRegionSelectorTiming.FinalStanceIndexReferencesExistingEventTime (0 ms)
+[----------] 1 test from ConvexRegionSelectorTiming (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+
+
+-- run_test.py: return code 0
+-- run_test.py: inject classname prefix into gtest result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml'
+-- run_test.py: verify result file '/workspace/src/legged_perceptive/build/legged_perceptive_interface/test_results/legged_perceptive_interface/test_convex_region_selector_timing.gtest.xml'

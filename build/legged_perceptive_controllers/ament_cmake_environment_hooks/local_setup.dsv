@@ -1,0 +1,3 @@
+source;share/legged_perceptive_controllers/environment/ament_prefix_path.sh
+source;share/legged_perceptive_controllers/environment/library_path.sh
+source;share/legged_perceptive_controllers/environment/path.sh

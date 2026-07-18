@@ -1,0 +1,91 @@
+-- run_test.py: invoking following command in '/workspace/src/legged_perceptive/build/perceptive_sanitize':
+ - /workspace/src/legged_perceptive/build/perceptive_sanitize/test_perceptive_reference_manager --gtest_output=xml:/workspace/src/legged_perceptive/build/perceptive_sanitize/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml
+
+Running main() from /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PerceptiveReferenceManager
+[ RUN      ] PerceptiveReferenceManager.ResamplesInputFromInputTrajectory
+=================================================================
+==72781==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x50200000fb28 at pc 0x6258673c0c09 bp 0x7ffc3a3e0620 sp 0x7ffc3a3e0610
+READ of size 8 at 0x50200000fb28 thread T0
+    #0 0x6258673c0c08 in Eigen::internal::handmade_aligned_free(void*) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:118
+    #1 0x6258673c0c84 in Eigen::internal::aligned_free(void*) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:206
+    #2 0x6258673c8a21 in void Eigen::internal::conditional_aligned_free<true>(void*) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:259
+    #3 0x6258673c52ed in void Eigen::internal::conditional_aligned_delete_auto<double, true>(double*, unsigned long) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:446
+    #4 0x6258673c22d3 in Eigen::DenseStorage<double, -1, -1, 1, 0>::~DenseStorage() /usr/include/eigen3/Eigen/src/Core/DenseStorage.h:621
+    #5 0x6258673c0d01 in Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >::~PlainObjectBase() /usr/include/eigen3/Eigen/src/Core/PlainObjectBase.h:98
+    #6 0x6258673c0d73 in Eigen::Matrix<double, -1, 1, 0, -1, 1>::~Matrix() /usr/include/eigen3/Eigen/src/Core/Matrix.h:178
+    #7 0x6258673cd7e9 in void std::_Destroy<Eigen::Matrix<double, -1, 1, 0, -1, 1> >(Eigen::Matrix<double, -1, 1, 0, -1, 1>*) /usr/include/c++/11/bits/stl_construct.h:151
+    #8 0x6258673cb9c9 in void std::_Destroy_aux<false>::__destroy<Eigen::Matrix<double, -1, 1, 0, -1, 1>*>(Eigen::Matrix<double, -1, 1, 0, -1, 1>*, Eigen::Matrix<double, -1, 1, 0, -1, 1>*) /usr/include/c++/11/bits/stl_construct.h:163
+    #9 0x6258673c8a98 in void std::_Destroy<Eigen::Matrix<double, -1, 1, 0, -1, 1>*>(Eigen::Matrix<double, -1, 1, 0, -1, 1>*, Eigen::Matrix<double, -1, 1, 0, -1, 1>*) /usr/include/c++/11/bits/stl_construct.h:196
+    #10 0x6258673c540b in void std::_Destroy<Eigen::Matrix<double, -1, 1, 0, -1, 1>*, Eigen::Matrix<double, -1, 1, 0, -1, 1> >(Eigen::Matrix<double, -1, 1, 0, -1, 1>*, Eigen::Matrix<double, -1, 1, 0, -1, 1>*, std::allocator<Eigen::Matrix<double, -1, 1, 0, -1, 1> >&) /usr/include/c++/11/bits/alloc_traits.h:848
+    #11 0x6258673c2624 in std::vector<Eigen::Matrix<double, -1, 1, 0, -1, 1>, std::allocator<Eigen::Matrix<double, -1, 1, 0, -1, 1> > >::~vector() /usr/include/c++/11/bits/stl_vector.h:680
+    #12 0x6258673c0e47 in ocs2::TargetTrajectories::~TargetTrajectories() /workspace/install/ocs2_core/include/ocs2_core/reference/TargetTrajectories.h:41
+    #13 0x6258673be1c0 in TestBody /workspace/src/legged_perceptive/legged_perceptive_interface/test/test_perceptive_reference_manager.cpp:21
+    #14 0x6258674c68cc in void testing::internal::HandleSehExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2433
+    #15 0x6258674a4fa5 in void testing::internal::HandleExceptionsInMethodIfSupported<testing::Test, void>(testing::Test*, void (testing::Test::*)(), char const*) /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2469
+    #16 0x6258673f583d in testing::Test::Run() /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2508
+    #17 0x6258673f9124 in testing::TestInfo::Run() /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2684
+    #18 0x6258673fc81c in testing::TestSuite::Run() /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2816
+    #19 0x625867438f27 in testing::internal::UnitTestImpl::RunAllTests() /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:5338
+    #20 0x6258674cc140 in bool testing::internal::HandleSehExceptionsInMethodIfSupported<testing::internal::UnitTestImpl, bool>(testing::internal::UnitTestImpl*, bool (testing::internal::UnitTestImpl::*)(), char const*) /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2433
+    #21 0x6258674aaed4 in bool testing::internal::HandleExceptionsInMethodIfSupported<testing::internal::UnitTestImpl, bool>(testing::internal::UnitTestImpl*, bool (testing::internal::UnitTestImpl::*)(), char const*) /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:2469
+    #22 0x62586742c41a in testing::UnitTest::Run() /opt/ros/humble/src/gtest_vendor/./src/gtest.cc:4925
+    #23 0x6258673d1e19 in RUN_ALL_TESTS() /opt/ros/humble/src/gtest_vendor/include/gtest/gtest.h:2473
+    #24 0x6258673d1bee in main /opt/ros/humble/src/gtest_vendor/src/gtest_main.cc:45
+    #25 0x7f172e183d8f  (/lib/x86_64-linux-gnu/libc.so.6+0x29d8f)
+    #26 0x7f172e183e3f in __libc_start_main (/lib/x86_64-linux-gnu/libc.so.6+0x29e3f)
+    #27 0x6258673bc3d4 in _start (/workspace/src/legged_perceptive/build/perceptive_sanitize/test_perceptive_reference_manager+0x1d23d4)
+
+0x50200000fb28 is located 8 bytes to the left of 16-byte region [0x50200000fb30,0x50200000fb40)
+allocated by thread T0 here:
+    #0 0x7f1732cad887 in __interceptor_malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:145
+    #1 0x62586750fb10 in Eigen::internal::aligned_malloc(unsigned long) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:182
+    #2 0x62586750fb10 in void* Eigen::internal::conditional_aligned_malloc<true>(unsigned long) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:241
+    #3 0x62586750fb10 in double* Eigen::internal::conditional_aligned_new_auto<double, true>(unsigned long) /usr/include/eigen3/Eigen/src/Core/util/Memory.h:404
+    #4 0x62586750fb10 in Eigen::DenseStorage<double, -1, -1, 1, 0>::resize(long, long, long) /usr/include/eigen3/Eigen/src/Core/DenseStorage.h:639
+    #5 0x62586750fb10 in Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >::resize(long, long) /usr/include/eigen3/Eigen/src/Core/PlainObjectBase.h:285
+    #6 0x62586750fb10 in void Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >::resizeLike<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const> >(Eigen::EigenBase<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const> > const&) /usr/include/eigen3/Eigen/src/Core/PlainObjectBase.h:367
+    #7 0x62586750fb10 in Eigen::PlainObjectBase<Eigen::Matrix<double, -1, 1, 0, -1, 1> >::PlainObjectBase<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const> >(Eigen::DenseBase<Eigen::CwiseBinaryOp<Eigen::internal::scalar_sum_op<double, double>, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::CwiseBinaryOp<Eigen::internal::scalar_product_op<double, double>, Eigen::CwiseNullaryOp<Eigen::internal::scalar_constant_op<double>, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const, Eigen::Matrix<double, -1, 1, 0, -1, 1> const> const> > const&) /usr/include/eigen3/Eigen/src/Core/PlainObjectBase.h:593
+    #8 0x50300036545f  (<unknown module>)
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /usr/include/eigen3/Eigen/src/Core/util/Memory.h:118 in Eigen::internal::handmade_aligned_free(void*)
+Shadow bytes around the buggy address:
+  0x0a047fff9f10: fa fa 00 00 fa fa 00 fa fa fa 00 00 fa fa 00 fa
+  0x0a047fff9f20: fa fa 00 00 fa fa 00 fa fa fa 00 fa fa fa 00 00
+  0x0a047fff9f30: fa fa 00 fa fa fa 00 fa fa fa 00 fa fa fa fd fa
+  0x0a047fff9f40: fa fa 00 fa fa fa 04 fa fa fa 00 fa fa fa 04 fa
+  0x0a047fff9f50: fa fa 00 00 fa fa 00 fa fa fa 00 00 fa fa 00 00
+=>0x0a047fff9f60: fa fa 00 00 fa[fa]00 00 fa fa 00 00 fa fa 00 00
+  0x0a047fff9f70: fa fa 00 00 fa fa 00 00 fa fa fa fa fa fa fa fa
+  0x0a047fff9f80: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0a047fff9f90: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0a047fff9fa0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0a047fff9fb0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+  Shadow gap:              cc
+==72781==ABORTING
+
+
+-- run_test.py: return code 1
+-- run_test.py: generate result file '/workspace/src/legged_perceptive/build/perceptive_sanitize/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml' with failed test
+-- run_test.py: verify result file '/workspace/src/legged_perceptive/build/perceptive_sanitize/test_results/legged_perceptive_interface/test_perceptive_reference_manager.gtest.xml'

@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-5507cc542469a47259fb.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "legged_perceptive_controllers",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "grid_map_publisher::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-grid_map_publisher-d5ac7023e308c8a11374.json",
+					"name" : "grid_map_publisher",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "legged_perceptive_controllers::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-legged_perceptive_controllers-804e0ae1e4c78aa4b39d.json",
+					"name" : "legged_perceptive_controllers",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "legged_perceptive_controllers_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-legged_perceptive_controllers_uninstall-03ea8a0b9b32a20e57aa.json",
+					"name" : "legged_perceptive_controllers_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-cc4f18095f330c253671.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/workspace/src/legged_perceptive/build/legged_perceptive_controllers",
+		"source" : "/workspace/src/legged_perceptive/legged_perceptive_controllers"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

@@ -10,6 +10,7 @@
 #include <convex_plane_decomposition/ConvexRegionGrowing.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace legged {
 ConvexRegionSelector::ConvexRegionSelector(CentroidalModelInfo info,
@@ -84,6 +85,9 @@ void ConvexRegionSelector::update(const ModeSchedule& modeSchedule, scalar_t ini
   planarTerrain_ = *planarTerrainPtr_;  // Need copy storage it since PlanarTerrainProjection.regionPtr is a pointer
   const auto& modeSequence = modeSchedule.modeSequence;
   const auto& eventTimes = modeSchedule.eventTimes;
+  if (modeSequence.empty() || eventTimes.size() + 1 != modeSequence.size()) {
+    throw std::invalid_argument("[ConvexRegionSelector] ModeSchedule must contain N modes and N-1 event times.");
+  }
   const auto contactFlagStocks = extractContactFlags(modeSequence);
   const size_t numPhases = modeSequence.size();
 
@@ -118,8 +122,8 @@ void ConvexRegionSelector::update(const ModeSchedule& modeSchedule, scalar_t ini
       if (contactFlagStocks[leg][i]) {
         const int standStartIndex = startIndices[leg][i];
         const int standFinalIndex = finalIndices[leg][i];
-        const scalar_t standStartTime = eventTimes[standStartIndex];
-        const scalar_t standFinalTime = eventTimes[standFinalIndex];
+        const scalar_t standStartTime = eventTimes.empty() ? initTime : eventTimes[standStartIndex];
+        const scalar_t standFinalTime = eventTimes.empty() ? initTime : eventTimes[standFinalIndex];
         const scalar_t standMiddleTime = standStartTime + (standFinalTime - standStartTime) / 2;
 
         if (!numerics::almost_eq(standMiddleTime, lastStandMiddleTime)) {
@@ -183,7 +187,7 @@ std::pair<int, int> ConvexRegionSelector::findIndex(size_t index, const std::vec
     }
   }
   // find the final time
-  int finalTimesIndex = std::max(0, numPhases - 1);
+  int finalTimesIndex = std::max(0, numPhases - 2);
   for (int ip = static_cast<int>(index) + 1; ip < numPhases; ip++) {
     if (!contactFlagStock[ip]) {
       finalTimesIndex = ip - 1;

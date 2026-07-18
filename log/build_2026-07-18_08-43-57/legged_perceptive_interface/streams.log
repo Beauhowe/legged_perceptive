@@ -1,0 +1,50 @@
+[0.013s] Invoking command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /workspace/src/legged_perceptive/build/legged_perceptive_interface -- -j20 -l20
+[0.055s] [ 23%] Built target gtest_main
+[0.055s] [ 23%] Built target gtest
+[0.061s] [35m[1mConsolidate compiler generated dependencies of target legged_perceptive_interface[0m
+[0.111s] [ 29%] [32mBuilding CXX object CMakeFiles/legged_perceptive_interface.dir/src/PerceptiveLeggedReferenceManager.cpp.o[0m
+[4.235s] [ 35%] [32m[1mLinking CXX static library liblegged_perceptive_interface.a[0m
+[4.342s] [ 76%] Built target legged_perceptive_interface
+[4.360s] [ 82%] [32m[1mLinking CXX executable test_perceptive_reference_manager[0m
+[4.370s] [ 88%] [32m[1mLinking CXX executable test_convex_region_selector_timing[0m
+[4.925s] [ 94%] Built target test_perceptive_reference_manager
+[4.955s] [100%] Built target test_convex_region_selector_timing
+[4.985s] Invoked command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /workspace/src/legged_perceptive/build/legged_perceptive_interface -- -j20 -l20
+[4.993s] Invoking command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /workspace/src/legged_perceptive/build/legged_perceptive_interface
+[4.998s] -- Install configuration: ""
+[4.998s] -- Installing: /workspace/src/legged_perceptive/install/legged_perceptive_interface/lib/liblegged_perceptive_interface.a
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/TargetTrajectoryResampler.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/PerceptiveLeggedReferenceManager.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/constraint
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/constraint/FootCollisionConstraint.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/constraint/FootPlacementConstraint.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/constraint/SphereSdfConstraint.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/PerceptiveLeggedPrecomputation.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/ConvexRegionSelector.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/include/legged_perceptive_interface/PerceptiveLeggedInterface.h
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/export_legged_perceptive_interface.cmake
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/export_legged_perceptive_interface-noconfig.cmake
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/library_path.sh
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/library_path.dsv
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/ament_index/resource_index/package_run_dependencies/legged_perceptive_interface
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/ament_index/resource_index/parent_prefix_path/legged_perceptive_interface
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/ament_prefix_path.sh
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/ament_prefix_path.dsv
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/path.sh
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/environment/path.dsv
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/local_setup.bash
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/local_setup.sh
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/local_setup.zsh
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/local_setup.dsv
+[5.005s] -- Installing: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/package.dsv
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/ament_index/resource_index/packages/legged_perceptive_interface
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/export_legged_perceptive_interfaceExport.cmake
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/export_legged_perceptive_interfaceExport-noconfig.cmake
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/ament_cmake_export_include_directories-extras.cmake
+[5.005s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/ament_cmake_export_targets-extras.cmake
+[5.006s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/ament_cmake_export_dependencies-extras.cmake
+[5.006s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/legged_perceptive_interfaceConfig.cmake
+[5.006s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/cmake/legged_perceptive_interfaceConfig-version.cmake
+[5.006s] -- Up-to-date: /workspace/src/legged_perceptive/install/legged_perceptive_interface/share/legged_perceptive_interface/package.xml
+[5.006s] Invoked command in '/workspace/src/legged_perceptive/build/legged_perceptive_interface' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /workspace/src/legged_perceptive/build/legged_perceptive_interface
