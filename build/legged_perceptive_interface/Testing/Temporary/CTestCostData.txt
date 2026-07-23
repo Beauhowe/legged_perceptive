@@ -1,3 +1,0 @@
-test_convex_region_selector_timing 6 0.00678059
-test_perceptive_reference_manager 6 0.00668614
----

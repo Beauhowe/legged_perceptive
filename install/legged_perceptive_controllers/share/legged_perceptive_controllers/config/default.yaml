@@ -1,3 +1,0 @@
-controllers:
-  perceptive_controller:
-    type: legged/PerceptiveController
