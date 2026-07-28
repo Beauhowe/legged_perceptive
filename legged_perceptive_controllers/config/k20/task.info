@@ -282,6 +282,14 @@ selfCollision
 }
 
 ; Whole body control
+; MPC desired-joint limit checks
+mpcSafety
+{
+  enableDesiredJointPositionLimit    false
+  enableDesiredJointVelocityLimit    false
+}
+
+; Whole body control
 torqueLimitsTask
 {
    (0,0)  220.0    ; HAA (match p1 URDF limits)
