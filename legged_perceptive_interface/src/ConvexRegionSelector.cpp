@@ -10,6 +10,7 @@
 #include <convex_plane_decomposition/ConvexRegionGrowing.h>
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 namespace legged {
@@ -20,6 +21,37 @@ ConvexRegionSelector::ConvexRegionSelector(CentroidalModelInfo info,
       numVertices_(numVertices),
       planarTerrainPtr_(std::move(planarTerrainPtr)),
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()) {}
+
+vector3_t ConvexRegionSelector::computeRaibertOffset(const vector3_t& measuredComVelocity,
+                                                     const vector3_t& desiredComVelocity,
+                                                     scalar_t invertedPendulumHeight, scalar_t raibertMaxOffset) {
+  constexpr scalar_t gravity = 9.81;
+  const vector3_t zeroOffset = vector3_t::Zero();
+
+  if (!measuredComVelocity.allFinite() || !desiredComVelocity.allFinite() ||
+      !std::isfinite(invertedPendulumHeight) || invertedPendulumHeight < 0.0 ||
+      !std::isfinite(raibertMaxOffset) || raibertMaxOffset < 0.0) {
+    return zeroOffset;
+  }
+
+  vector3_t offset = vector3_t::Zero();
+  offset.head<2>() = std::sqrt(invertedPendulumHeight / gravity) *
+                     (measuredComVelocity - desiredComVelocity).head<2>();
+  if (!offset.allFinite()) {
+    return zeroOffset;
+  }
+
+  // 使用二维模长统一缩放，保留速度误差方向；禁止分别裁剪 x、y 造成方向偏转。
+  const scalar_t horizontalNorm = offset.head<2>().norm();
+  if (!std::isfinite(horizontalNorm)) {
+    return zeroOffset;
+  }
+  if (horizontalNorm > raibertMaxOffset) {
+    offset.head<2>() *= raibertMaxOffset / horizontalNorm;
+  }
+
+  return offset;
+}
 
 convex_plane_decomposition::PlanarTerrainProjection ConvexRegionSelector::getProjection(size_t leg, scalar_t time) const {
   std::lock_guard<std::mutex> lock(mutex_);

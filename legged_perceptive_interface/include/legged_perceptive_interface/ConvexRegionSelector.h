@@ -34,6 +34,25 @@ class ConvexRegionSelector {
   ConvexRegionSelector(CentroidalModelInfo info, std::shared_ptr<convex_plane_decomposition::PlanarTerrain> PlanarTerrainPtr,
                        const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t numVertices);
 
+  /**
+   * @brief 根据世界系 CoM 速度误差计算 Raibert 水平落脚修正量。
+   *
+   * 使用倒立摆时间尺度 sqrt(invertedPendulumHeight / 9.81)，将实测速度减期望速度
+   * 的 x/y 分量转换为水平落脚偏移；随后按二维欧氏模长限制到 raibertMaxOffset，
+   * 不分别裁剪 x、y。输出 z 始终为零。
+   *
+   * 任一速度分量、参数或中间结果非有限，或者参数为负时，返回零向量作为安全
+   * 回退。该纯函数不读取开关、不保存历史，也不修改候选落脚点。
+   *
+   * @param measuredComVelocity 世界系实测 CoM 速度，单位 m/s。
+   * @param desiredComVelocity 世界系期望 CoM 速度，单位 m/s。
+   * @param invertedPendulumHeight 倒立摆等效高度，单位 m。
+   * @param raibertMaxOffset 允许的最大水平偏移模长，单位 m。
+   * @return 世界系 Raibert 落脚修正量，单位 m，且 z 恒为零。
+   */
+  static vector3_t computeRaibertOffset(const vector3_t& measuredComVelocity, const vector3_t& desiredComVelocity,
+                                        scalar_t invertedPendulumHeight, scalar_t raibertMaxOffset);
+
   void update(const ModeSchedule& modeSchedule, scalar_t initTime, const vector_t& initState, TargetTrajectories& targetTrajectories);
 
   convex_plane_decomposition::PlanarTerrainProjection getProjection(size_t leg, scalar_t time) const;

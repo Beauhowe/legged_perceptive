@@ -2,7 +2,7 @@
 
 日期：2026-07-31
 
-状态：执行中；S0、S1、S2 已通过，等待 Beauhao 确认后进入 S3
+状态：执行中；S0、S1、S2、S3 已通过，等待 Beauhao 确认后进入 S4
 
 设计基线：`2026-07-30-k20-perceptive-foothold-planning-design-implementation-ready.md`
 
@@ -85,7 +85,7 @@ G3 → H0 → H1 → H2 → H3 → REL
 | S0 | 固化未增强基线 | 测试记录，不改生产逻辑 | 运行现有两个测试目标；记录增强前基线和现有 projection/摆高覆盖缺口 | 当前构建和全部现有测试通过；工作树相关差异已记录 | [x] |
 | S1 | 只加入配置结构、默认值和数值校验 | `PerceptiveLeggedInterface.cpp`、配置声明/加载测试；暂不把参数接入算法 | 缺配置、全默认关闭、NaN/Inf、负值和 `[0,1]` 越界 | 配置缺失时启动行为不变；四项功能仍不可改变输出 | [x] |
 | S2 | 只完成 contact name→HAA 解析和左右派生 | 配置映射、Pinocchio 查询、对应测试 | 默认 LF/RF/LH/RH、打乱 contact 顺序、缺项、未知项、重复 joint、静态 y 近零 | 映射与数组顺序无关；非法映射只在相关功能开启时拒绝启动 | [x] |
-| S3 | 只实现 Raibert 数学纯函数 | selector 内部纯计算和测试；不接候选流程 | 零/正/负速度误差、二维模长限幅、z=0、非有限输入 | 定向测试通过；开关关闭时生产输出完全未变 | [ ] |
+| S3 | 只实现 Raibert 数学纯函数 | selector 内部纯计算和测试；不接候选流程 | 零/正/负速度误差、二维模长限幅、z=0、非有限输入 | 定向测试通过；开关关闭时生产输出完全未变 | [x] |
 | S4 | 只把 Raibert 接入第一触地事件和历史提交 | `ConvexRegionSelector.h/.cpp`、selector 测试 | 当前摆动腿第一事件、后续事件不修正、死区/低通、候选失败不更新历史 | T2 全通过；Raibert 单独开启和关闭回归均通过 | [ ] |
 | S5 | 只构造固定规划髋坐标和左右方向 | Pinocchio/selector 辅助逻辑及测试；惩罚权重保持不生效 | 四腿 HAA 根变换、LF/LH 与 RF/RH 方向相反、HAA 原生零旋转 | 不按腿下标或世界 y 判断左右；候选选择尚未改变 | [ ] |
 | S6 | 只接入运动学惩罚 | selector 候选代价和测试 | 正常、阈值、过伸、内跨、触地开始/结束累加、非有限回退 | T3 全通过；Raibert 回归通过；两个开关可独立工作 | [ ] |
@@ -174,7 +174,7 @@ swingTrajectoryPlanner.update(modeSchedule,
 
 | ID | 对应阶段 | 测试范围 | 必须断言 | 建议落点 | 状态 |
 |---|---|---|---|---|---|
-| T1 | S1–S2 | 配置兼容 | 缺配置/全关闭保持旧输出；contact 顺序打乱不改变映射；非法映射拒绝启动 | focused settings 测试；必要时新增测试目标 | [ ] |
+| T1 | S1–S2 | 配置兼容 | 缺配置/全关闭保持旧输出；contact 顺序打乱不改变映射；非法映射拒绝启动 | focused settings 测试；必要时新增测试目标 | [x] |
 | T2 | S3–S4 | Raibert | 零/正/负误差、第一触地点限定、XY 模长限幅、z=0、死区/低通、非有限回退、失败不提交历史 | selector 测试 | [ ] |
 | T3 | S5–S6 | 运动学 | 四腿侧别、左右内跨相反、HAA 原生零旋转、起止两次评分、阈值边界和非有限回退 | selector + Pinocchio fixture | [ ] |
 | T4 | S7–S10 | 冻结与 owner | 阈值前后、首次晚观察、时间容差、全部 phase 覆盖、地图替换、Precomputation 真消费、事务释放顺序 | `test_convex_region_selector_timing.cpp` 及 focused owner 测试 | [ ] |
@@ -380,3 +380,42 @@ Green 与 Regression：
 - S2 尚未构造规划髋坐标系、Raibert 数学函数或运动学惩罚；这些分别属于 S5、S3 和 S6。
 
 结论：S2 通过。按串行规则停在此处，不自动进入 S3。
+
+### S3：Raibert 数学纯函数（已通过）
+
+执行时间：2026-07-31 17:28:36 China/Shanghai
+
+Red：
+
+- 先新增 `test_raibert_offset` 和 CMake 测试目标，未添加生产函数。
+- 第一次构建先暴露测试自身把 `vector3_t` 放错命名空间；只修正测试类型名后重新执行 Red，不把测试错误计为预期失败。
+- 第二次构建按预期仅因 `ConvexRegionSelector::computeRaibertOffset` 不存在而失败，Red 与 S3 缺失行为直接对应。
+
+最小实现：
+
+- 在 `ConvexRegionSelector` 新增静态纯函数 `computeRaibertOffset()`，输入明确命名为世界系实测/期望 CoM 速度。
+- 使用 `sqrt(invertedPendulumHeight / 9.81) * (measuredComVelocity - desiredComVelocity)` 计算 XY 修正，输出 z 恒为零。
+- 限幅按二维欧氏模长统一缩放，保留误差方向，不分别裁剪 x/y。
+- 速度、参数或中间结果非有限，以及高度或最大偏移为负时返回零向量；高度或最大偏移为零也自然得到零偏移。
+- 函数不读取开关、不保存历史、不修改候选，也未被 `getNominalFoothold()` 或其他生产路径调用；S4 前落脚输出保持不变。
+- 新接口、单位、坐标系、公式、限幅和安全回退均已补充中文 Doxygen 或行内注释。
+
+Green 与 Regression：
+
+| 检查 | 结果 |
+|---|---|
+| S3 focused gtest | 7/7 通过：零误差、正误差、负误差、二维模长限幅、z=0、非有限速度、非法参数回退 |
+| `legged_perceptive_interface` 构建 | 通过 |
+| Interface 包级完整回归 | 5/5 CTest 目标、26/26 gtest 用例通过 |
+| 包级 `test-result` | 0 errors、0 failures、0 skipped |
+| `legged_perceptive_controllers` 下游构建 | 通过 |
+| 阶段边界检查 | 当前生产代码只有纯函数声明和定义；所有调用均位于 `test_raibert_offset.cpp`，配置未修改 |
+| `git diff --check`、S3 新增行 120 字符和相关文件尾随空白 | 通过 |
+
+说明：
+
+- 构建仅出现仓库既有的 Boost bind deprecated 提示。
+- 当前 `getNominalFoothold()` 中既有的硬编码、未消费 `feedback` 局部变量保持原样；S3 不借机重构或接入，避免越过 S4 范围。
+- T2 同时覆盖 S3 纯函数和 S4 事件接入/历史提交，因此本阶段不提前将 T2 标记完成。
+
+结论：S3 通过。按串行规则停在此处，不自动进入 S4。

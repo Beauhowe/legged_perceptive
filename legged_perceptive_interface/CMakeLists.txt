@@ -110,10 +110,18 @@ if(BUILD_TESTING)
   target_link_libraries(test_contact_leg_root_resolver
     ${PROJECT_NAME}
   )
+
+  ament_add_gtest(test_raibert_offset
+    test/test_raibert_offset.cpp
+  )
+  target_link_libraries(test_raibert_offset
+    ${PROJECT_NAME}
+  )
   target_compile_options(test_perceptive_reference_manager PRIVATE ${OCS2_PINOCCHIO_FLAGS})
   target_compile_options(test_convex_region_selector_timing PRIVATE ${OCS2_PINOCCHIO_FLAGS})
   target_compile_options(test_perceptive_foothold_planning_settings PRIVATE ${OCS2_PINOCCHIO_FLAGS})
   target_compile_options(test_contact_leg_root_resolver PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+  target_compile_options(test_raibert_offset PRIVATE ${OCS2_PINOCCHIO_FLAGS})
 endif()
 
 ament_package()
