@@ -24,6 +24,37 @@ swing_trajectory_config
   swingTimeScale                0.15
 }
 
+perceptive_foothold_planning
+{
+  enableRaibertFeedback       false
+  enableKinematicPenalty      false
+  enableLateSwingFreeze       false
+  enableTerrainClearance      false
+
+  invertedPendulumHeight      0.55
+  raibertMaxOffset            0.08
+  previousFootholdFactor      0.70
+  previousFootholdDeadzone    0.01
+
+  nominalLegExtension         0.62
+  kinematicPenaltyWeight      5.0
+
+  freezePhase                 0.50
+  contactTimeMatchTolerance   0.03
+
+  terrainClearanceMargin      0.03
+  maxTerrainAdaptation        0.12
+
+  ; 按 contact 名称显式映射；顺序不依赖腿数组，仅在运动学惩罚开启时严格校验
+  legRootJointByContact
+  {
+    LF_FOOT LF_HAA
+    RF_FOOT RF_HAA
+    LH_FOOT LH_HAA
+    RH_FOOT RH_HAA
+  }
+}
+
 ; DDP settings
 ddp
 {

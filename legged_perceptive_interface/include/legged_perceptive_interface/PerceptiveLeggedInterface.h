@@ -9,6 +9,9 @@
 #include <ocs2_sphere_approximation/PinocchioSphereInterface.h>
 #include <grid_map_sdf/SignedDistanceField.hpp>
 
+#include "legged_perceptive_interface/ContactLegRootResolver.h"
+#include "legged_perceptive_interface/PerceptiveFootholdPlanningSettings.h"
+
 namespace legged {
 
 class PerceptiveLeggedInterface : public legged::LeggedInterface {
@@ -34,6 +37,15 @@ class PerceptiveLeggedInterface : public legged::LeggedInterface {
 
  protected:
   size_t numVertices_ = 16;
+
+  PerceptiveFootholdPlanningSettings perceptiveFootholdPlanningSettings_;
+
+  /**
+   * @brief 与运行时 contactNames3DoF 同序的 HAA 映射和左右侧别。
+   *
+   * 运动学惩罚关闭时为空；S2 只解析并保存，尚未把结果接入候选代价。
+   */
+  std::vector<ContactLegRoot> contactLegRoots_;
 
   std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr_;
   std::shared_ptr<grid_map::SignedDistanceField> signedDistanceFieldPtr_;

@@ -18,8 +18,10 @@ add_library(${PROJECT_NAME}
   src/constraint/FootCollisionConstraint.cpp
   src/constraint/FootPlacementConstraint.cpp
   src/constraint/SphereSdfConstraint.cpp
+  src/ContactLegRootResolver.cpp
   src/ConvexRegionSelector.cpp
   src/TargetTrajectoryResampler.cpp
+  src/PerceptiveFootholdPlanningSettings.cpp
   src/PerceptiveLeggedReferenceManager.cpp
   src/PerceptiveLeggedPrecomputation.cpp
   src/PerceptiveLeggedInterface.cpp
@@ -94,8 +96,24 @@ if(BUILD_TESTING)
   target_link_libraries(test_perceptive_reference_manager
     ${PROJECT_NAME}
   )
+
+  ament_add_gtest(test_perceptive_foothold_planning_settings
+    test/test_perceptive_foothold_planning_settings.cpp
+  )
+  target_link_libraries(test_perceptive_foothold_planning_settings
+    ${PROJECT_NAME}
+  )
+
+  ament_add_gtest(test_contact_leg_root_resolver
+    test/test_contact_leg_root_resolver.cpp
+  )
+  target_link_libraries(test_contact_leg_root_resolver
+    ${PROJECT_NAME}
+  )
   target_compile_options(test_perceptive_reference_manager PRIVATE ${OCS2_PINOCCHIO_FLAGS})
   target_compile_options(test_convex_region_selector_timing PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+  target_compile_options(test_perceptive_foothold_planning_settings PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+  target_compile_options(test_contact_leg_root_resolver PRIVATE ${OCS2_PINOCCHIO_FLAGS})
 endif()
 
 ament_package()

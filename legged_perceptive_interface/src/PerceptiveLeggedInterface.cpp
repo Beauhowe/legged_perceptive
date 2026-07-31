@@ -91,6 +91,10 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
 
 void PerceptiveLeggedInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/,
                                                       const std::string& referenceFile, bool verbose) {
+  perceptiveFootholdPlanningSettings_ = loadPerceptiveFootholdPlanningSettings(taskFile, "perceptive_foothold_planning", verbose);
+  contactLegRoots_ = resolveContactLegRoots(perceptiveFootholdPlanningSettings_, modelSettings_.contactNames3DoF,
+                                            *pinocchioInterfacePtr_);
+
   auto swingTrajectoryPlanner =
       std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
 

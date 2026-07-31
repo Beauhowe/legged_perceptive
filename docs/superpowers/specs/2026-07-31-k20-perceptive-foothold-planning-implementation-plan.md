@@ -2,7 +2,7 @@
 
 日期：2026-07-31
 
-状态：实现就绪，待编码与分级验收
+状态：执行中；S0、S1、S2 已通过，等待 Beauhao 确认后进入 S3
 
 设计基线：`2026-07-30-k20-perceptive-foothold-planning-design-implementation-ready.md`
 
@@ -26,6 +26,8 @@
 - 每阶段依次执行：补充定向测试、确认测试因缺少本阶段行为而失败、实现最小代码、定向测试通过、包级全量回归通过、`git diff --check` 通过。
 - 如果新增测试一开始就通过，先确认它是否真正覆盖目标行为，不能把无效测试当作阶段完成。
 - 测试失败时只修复本阶段引入的问题；发现前置设计问题则停止、记录证据并更新计划。
+- 后续新增或修改的接口、数据结构、关键算法、坐标系/单位、状态生命周期、回退路径和安全边界必须同步添加准确的中文注释；接口优先使用 Doxygen，非显然实现使用行内注释，简单赋值不机械逐行注释。
+- 修改代码行为时必须同步更新受影响的既有中文注释；与实现不一致或已经失效的注释视为阶段回归。
 - projection、polygon、历史滤波值和冻结 owner 按同一事务提交，禁止部分更新。
 - 不修改 MPC 动力学、求解器、WBC、状态估计和硬件接口。
 - 发现必须修改“预计不修改”文件时，先更新本计划并说明原因。
@@ -68,10 +70,10 @@ G3 → H0 → H1 → H2 → H3 → REL
 | A | 确认上一阶段为绿色，并记录当前相关文件 diff | 上一阶段定向测试、包级测试和 `diff --check` 结果 | 不开始本阶段 |
 | B | 只增加本阶段测试或 fixture | 测试名称与目标行为一一对应 | 缩小测试范围 |
 | C | 运行定向测试，确认预期失败 | 断言失败或预期的缺少本阶段 API 编译失败；不能是环境故障或无关回归 | 先修测试环境或测试本身 |
-| D | 编写满足测试的最小生产代码 | diff 只涉及本阶段允许文件 | 回退无关修改 |
+| D | 编写满足测试的最小生产代码并同步补充中文注释 | diff 只涉及本阶段允许文件；新增/修改语义的接口、状态、关键逻辑和回退路径均有准确中文注释 | 回退无关修改或补齐注释 |
 | E | 重新运行定向测试 | 本阶段新增测试全部通过 | 停止并修复 |
 | F | 运行 `legged_perceptive_interface` 全部测试 | 原有和此前阶段测试全部通过 | 停止并修复回归 |
-| G | 检查四项开关仍保持计划状态并执行 `git diff --check` | 无意外启用、无格式错误、无范围扩大 | 不进入下一阶段 |
+| G | 检查四项开关、中文注释与 diff | 无意外启用；注释与实现一致；`git diff --check` 无格式错误且无范围扩大 | 不进入下一阶段 |
 | H | 更新本表状态和阶段记录 | 写明修改文件、测试结果和遗留风险 | 阶段不算完成 |
 
 每阶段结束后先向 Beauhao 汇报结果，再进入下一阶段。Gazebo 和实机阶段同样逐项执行，不把多个开关同时首次开启。
@@ -80,9 +82,9 @@ G3 → H0 → H1 → H2 → H3 → REL
 
 | ID | 本阶段唯一目标 | 允许修改 | 先写的定向测试 | 进入下一阶段的硬门禁 | 状态 |
 |---|---|---|---|---|---|
-| S0 | 固化未增强基线 | 测试记录，不改生产逻辑 | 运行现有两个测试目标，记录四项关闭时 projection/摆高关键输出 | 当前构建和全部现有测试通过；工作树相关差异已记录 | [ ] |
-| S1 | 只加入配置结构、默认值和数值校验 | `PerceptiveLeggedInterface.cpp`、配置声明/加载测试；暂不把参数接入算法 | 缺配置、全默认关闭、NaN/Inf、负值和 `[0,1]` 越界 | 配置缺失时启动行为不变；四项功能仍不可改变输出 | [ ] |
-| S2 | 只完成 contact name→HAA 解析和左右派生 | 配置映射、Pinocchio 查询、对应测试 | 默认 LF/RF/LH/RH、打乱 contact 顺序、缺项、未知项、重复 joint、静态 y 近零 | 映射与数组顺序无关；非法映射只在相关功能开启时拒绝启动 | [ ] |
+| S0 | 固化未增强基线 | 测试记录，不改生产逻辑 | 运行现有两个测试目标；记录增强前基线和现有 projection/摆高覆盖缺口 | 当前构建和全部现有测试通过；工作树相关差异已记录 | [x] |
+| S1 | 只加入配置结构、默认值和数值校验 | `PerceptiveLeggedInterface.cpp`、配置声明/加载测试；暂不把参数接入算法 | 缺配置、全默认关闭、NaN/Inf、负值和 `[0,1]` 越界 | 配置缺失时启动行为不变；四项功能仍不可改变输出 | [x] |
+| S2 | 只完成 contact name→HAA 解析和左右派生 | 配置映射、Pinocchio 查询、对应测试 | 默认 LF/RF/LH/RH、打乱 contact 顺序、缺项、未知项、重复 joint、静态 y 近零 | 映射与数组顺序无关；非法映射只在相关功能开启时拒绝启动 | [x] |
 | S3 | 只实现 Raibert 数学纯函数 | selector 内部纯计算和测试；不接候选流程 | 零/正/负速度误差、二维模长限幅、z=0、非有限输入 | 定向测试通过；开关关闭时生产输出完全未变 | [ ] |
 | S4 | 只把 Raibert 接入第一触地事件和历史提交 | `ConvexRegionSelector.h/.cpp`、selector 测试 | 当前摆动腿第一事件、后续事件不修正、死区/低通、候选失败不更新历史 | T2 全通过；Raibert 单独开启和关闭回归均通过 | [ ] |
 | S5 | 只构造固定规划髋坐标和左右方向 | Pinocchio/selector 辅助逻辑及测试；惩罚权重保持不生效 | 四腿 HAA 根变换、LF/LH 与 RF/RH 方向相反、HAA 原生零旋转 | 不按腿下标或世界 y 判断左右；候选选择尚未改变 | [ ] |
@@ -238,6 +240,8 @@ R0b 在 S12 完成后执行：通过运行时诊断确认有限样本数大于�
 
 预计修改：
 
+- `legged_perceptive_interface/include/legged_perceptive_interface/PerceptiveFootholdPlanningSettings.h`
+- `legged_perceptive_interface/src/PerceptiveFootholdPlanningSettings.cpp`
 - `legged_perceptive_interface/include/legged_perceptive_interface/ConvexRegionSelector.h`
 - `legged_perceptive_interface/src/ConvexRegionSelector.cpp`
 - `legged_perceptive_interface/include/legged_perceptive_interface/PerceptiveLeggedReferenceManager.h`
@@ -265,3 +269,114 @@ R0b 在 S12 完成后执行：通过运行时诊断确认有限样本数大于�
 - [ ] R0a、R0b 通过后才在 G1 开启地形净空；失效时自动回退固定摆高。
 - [ ] G0–G3 和 H0–H3 达到门禁，未触发终止条件。
 - [ ] 参数、测试证据、已知回退和最终默认值均记录完成。
+
+## 13. 阶段执行记录
+
+### S0：固化未增强基线（已通过）
+
+执行时间：2026-07-31 15:48:10 China/Shanghai
+
+基线：
+
+- 分支：`bug/perc_mpc_ext`
+- 提交：`a89129619a846c9b4fdbd051db127ab596315086`
+- 执行前 `git status --short` 无输出。
+- 未修改生产代码、配置或测试代码；构建产物只写入工作区的 `build/`、`install/` 和 `log/`。
+
+结果：
+
+| 检查 | 结果 |
+|---|---|
+| `colcon build --packages-select legged_perceptive_interface --cmake-args -DBUILD_TESTING=ON` | 通过，1 个包成功 |
+| 定向运行 `test_convex_region_selector_timing` | 通过；非 ASan 构建执行 1 个用例，ASan 专用用例因未定义 `__SANITIZE_ADDRESS__` 未编译 |
+| 定向运行 `test_perceptive_reference_manager` | 通过；执行 1 个用例 |
+| `colcon test --packages-select legged_perceptive_interface --event-handlers console_direct+` | 通过，2/2 个 CTest 目标、0 失败 |
+| 包级 `colcon test-result --test-result-base /workspace/build/legged_perceptive_interface --verbose` | 通过，0 errors、0 failures、0 skipped |
+| `git diff --check` | 通过 |
+| 构建和测试后的 `git status --short` | 无输出 |
+
+结果解释：
+
+- 无参数的全工作区 `colcon test-result --verbose` 会读到 `/workspace/build/legged_controllers` 在 2026-07-29 留下的 7 个历史失败；它们不属于本次测试包。后续阶段统一使用包级 `--test-result-base`，同时以本阶段刚执行的 CTest 输出为准。
+- 当前两个测试目标只覆盖 selector 末端 stance 索引和 ReferenceManager 输入重采样，尚未锁定完整 projection 与摆高输出。S1 必须在配置开始影响任何算法之前，先加入“配置缺失/四项关闭保持旧行为”的回归断言；该覆盖缺口不得带入 S3 的算法实现。
+
+结论：S0 通过。按串行规则停在此处，不自动进入 S1。
+
+### S1：配置结构、默认值和数值校验（已通过）
+
+执行时间：2026-07-31 16:22:45 China/Shanghai
+
+Red：
+
+- 先新增 `test_perceptive_foothold_planning_settings` 及 CMake 测试目标，未添加生产 API。
+- `colcon build --packages-select legged_perceptive_interface --cmake-args -DBUILD_TESTING=ON` 按预期失败，唯一首因是 `PerceptiveFootholdPlanningSettings.h` 不存在。
+- Red 与本阶段缺失行为直接对应，不是环境故障或旧测试回归。
+
+最小实现：
+
+- 新增独立 `PerceptiveFootholdPlanningSettings` 头源文件，包含四个默认 `false` 开关和十个设计标量。
+- 缺失 `perceptive_foothold_planning` 配置组或任一开关时使用默认关闭；其余标量缺失时使用设计默认值。
+- 所有标量必须有限；高度、距离、裕量和权重不得为负；`previousFootholdFactor` 与 `freezePhase` 必须位于 `[0,1]`。
+- `PerceptiveLeggedInterface` 只加载并保存 settings，没有传给 `ConvexRegionSelector`、`PerceptiveLeggedReferenceManager` 或 `SwingTrajectoryPlanner`。
+- K20 感知 `task.info` 显式加入同一配置组，四项开关全部保持 `false`。
+- 删除当前无消费方的公开 getter，只保留后续阶段可在 Interface 内部使用的 protected 成员。
+
+Green 与 Regression：
+
+| 检查 | 结果 |
+|---|---|
+| S1 focused gtest | 5/5 通过：缺配置默认、显式全关、显式值加载、非有限/越界校验、loader 调用校验 |
+| `legged_perceptive_interface` 构建 | 通过 |
+| Interface 包级完整回归 | 3/3 CTest 目标、7/7 gtest 用例通过 |
+| 包级 `test-result` | 0 errors、0 failures、0 skipped |
+| `legged_perceptive_controllers` 构建 | 通过，确认配置所在包可正常构建安装 |
+| `git diff --check` | 通过 |
+| 新文件行长与尾随空白检查 | 通过 |
+
+说明：
+
+- 两个包构建仅出现仓库既有的 Boost bind deprecated 提示。
+- 环境未安装 `clang-format`，命令返回 127 且未写文件；已用行长、尾随空白、编译和 diff 检查替代。
+- S1 没有建立 contact name→HAA 映射，也没有使四项算法生效；这些属于后续阶段。
+
+结论：S1 通过。按串行规则停在此处，不自动进入 S2。
+
+### S2：contact name→HAA 解析和左右派生（已通过）
+
+执行时间：2026-07-31 17:12:01 China/Shanghai
+
+Red：
+
+- 先新增 `test_contact_leg_root_resolver`、settings 映射断言和 CMake 测试目标，未添加 resolver 生产 API。
+- `colcon build --packages-select legged_perceptive_interface --cmake-args -DBUILD_TESTING=ON` 按预期失败，首因仅为 `ContactLegRootResolver.h` 和 `legRootJointByContact` 尚不存在。
+- Red 与 S2 的配置解析及 Pinocchio 映射缺失直接对应，不是环境故障或旧测试回归。
+
+最小实现：
+
+- settings 新增 `legRootJointByContact` 原始映射数组；loader 保留配置顺序和重复 contact，供 resolver 做严格校验。
+- 新增 `ContactLegRootResolver`：运动学惩罚关闭时直接返回空结果，不校验缺失或非法的可选映射。
+- 开关开启时按运行时 `modelSettings.contactNames3DoF` 顺序解析；拒绝重复运行时 contact、配置缺项/未知项/重复 contact、重复 joint、不存在或非 1-DoF joint，以及不是 floating base 直接子关节的映射。
+- 左右侧只由 Pinocchio 中 HAA 相对 base 的静态 y 符号派生；y 必须有限且绝对值大于 `1e-6 m`，不使用数组下标、contact 名称前缀或世界系足端位置。
+- `PerceptiveLeggedInterface` 只保存解析结果，尚未传给 `ConvexRegionSelector` 或改变候选代价；K20 配置加入四个显式 contact→HAA 映射，四项功能仍全部为 `false`。
+- 新增和修改的接口、数据结构、映射逻辑、回退边界及配置均补充中文 Doxygen 或行内注释。
+
+Green 与 Regression：
+
+| 检查 | 结果 |
+|---|---|
+| S2 resolver focused gtest | 7/7 通过：关闭态、默认四腿、打乱 contact 顺序、缺失/未知 contact、重复 contact/joint、无效/非腿根 joint、静态 y 近零 |
+| S1 settings focused gtest | 5/5 通过，新增映射加载与缺配置空映射断言 |
+| Interface 包级完整回归 | 4/4 CTest 目标、18/18 gtest 用例通过 |
+| 包级 `test-result` | 0 errors、0 failures、0 skipped |
+| 真实 K20 URDF Pinocchio C++ 核验 | 通过：LF/LH y=`+0.08 m`，RF/RH y=`-0.08 m`；四个 HAA 均为 floating base 的直接 1-DoF 子关节 |
+| `legged_perceptive_interface` 与 `legged_perceptive_controllers` 构建 | 通过；安装后的 K20 task.info 包含映射且四项开关仍为 false |
+| `git diff --check`、S2 新增文件 120 字符行长和尾随空白 | 通过 |
+
+说明：
+
+- 两个包和临时 Pinocchio C++ 核验仅出现仓库既有的 Boost bind deprecated 提示。
+- Python 环境未安装 `pinocchio` 模块，独立 Python 核验不可用；已改用同一已安装 Pinocchio C++ 库验证真实 K20 URDF。
+- `PerceptiveLeggedInterface.h/.cpp` 存在本阶段之前的 122–135 字符长行，S2 未重排这些无关代码；S2 实际新增/扩展文件单独通过 120 字符检查。
+- S2 尚未构造规划髋坐标系、Raibert 数学函数或运动学惩罚；这些分别属于 S5、S3 和 S6。
+
+结论：S2 通过。按串行规则停在此处，不自动进入 S3。
