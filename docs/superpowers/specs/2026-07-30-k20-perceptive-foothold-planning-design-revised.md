@@ -1,13 +1,13 @@
 # K20 感知落脚规划增强设计（论文与 OCS2 对齐修订版）
 
 日期：2026-07-30
-状态：待用户审阅
+状态：实现基线（地形净空地图层仍待运行时验证）
 目标机器人：K20
 主要步态：Trot
 
 ## 1. 修订目的
 
-经用户确认后，本文档将替代 `2026-07-28-k20-perceptive-foothold-planning-design.md` 作为后续实现基线；原文继续保留供比较。
+经本轮审查，本文档作为后续实现基线，替代 `2026-07-28-k20-perceptive-foothold-planning-design.md`；原文继续保留供比较。
 
 修订依据：
 
@@ -15,12 +15,14 @@
 - 工作区 `ocs2_perceptive_anymal` 中 `SwingTrajectoryPlanner`、`KinematicFootPlacementPenalty`、`FootPhase` 和 `SegmentedPlanesTerrainModel` 的实现。
 - K20 当前 centroidal MPC 状态、Pinocchio 模型、感知地图层和三次摆动样条接口。
 
-本次修订解决原设计中的四个实现歧义：
+本次修订及审查解决原设计中的六个实现歧义：
 
 1. 论文使用世界系基座线速度，K20 当前可直接获得的是质量归一化线动量的线性部分，即世界系 CoM 速度。
 2. K20 四个 HAA 根关节在 URDF 中均为零旋转，不能直接依赖原生 Hip frame 自动产生左右相反的内跨方向。
 3. `PlanarTerrainProjection` 持有指向当前地图副本的 `regionPtr`，冻结状态不能跨地图更新保存该裸指针。
-4. 当前 SDF 接收路径首选 `smooth_planar`，而摆动净空必须显式读取障碍高度层。
+4. 当前 SDF 接收路径首选 `smooth_planar`；OCS2 的路径高度剖面显式读取后处理后的 `elevation`，K20 摆动净空必须沿用该语义，不能把控制器启动时手动创建的 `elevation_before_postprocess` 占位层误认为实时感知地图。
+5. `ModelSettings::contactNames3DoF` 不从 `task.info` 加载，当前硬编码顺序为 `LF_FOOT, RF_FOOT, LH_FOOT, RH_FOOT`；腿根配置不能使用容易错位的并行数组。
+6. 地形净空开关不能仅依赖配置存在；启用前必须从实时 `PlanarTerrain` 消息验证障碍高度层。
 
 ## 2. 背景
 
@@ -129,17 +131,15 @@ perceptive_foothold_planning
   freezePhase                 0.50
   contactTimeMatchTolerance   0.03
 
-  terrainClearanceLayer       elevation_before_postprocess
-  terrainClearanceFallback    elevation
   terrainClearanceMargin      0.03
   maxTerrainAdaptation        0.12
 
-  legRootJointNames
+  legRootJointByContact
   {
-    [0] LF_HAA
-    [1] LH_HAA
-    [2] RF_HAA
-    [3] RH_HAA
+    LF_FOOT LF_HAA
+    RF_FOOT RF_HAA
+    LH_FOOT LH_HAA
+    RH_FOOT RH_HAA
   }
 }
 ```
@@ -148,9 +148,11 @@ perceptive_foothold_planning
 
 - 配置组或任一开关缺失时，相应功能按关闭处理。
 - 开关关闭时不得改变当前输出。
-- `legRootJointNames` 仅在运动学惩罚开启时要求存在并有效。
-- `legRootJointNames` 的数组顺序必须与 `modelSettings.contactNames3DoF` 完全一致，不依赖隐含腿下标。
-- 地图层在启动时尚不可用，不因缺层阻止启动；运行时回退固定摆高并记录诊断。
+- `legRootJointByContact` 仅在运动学惩罚开启时要求存在并有效。
+- `ModelSettings::contactNames3DoF` 当前是 `ModelSettings.h` 中的硬编码默认值 `LF_FOOT, RF_FOOT, LH_FOOT, RH_FOOT`；`loadModelSettings()` 不从 `task.info` 加载该列表。
+- 加载腿根时遍历运行时的 `modelSettings.contactNames3DoF`，按足端名称查询 `legRootJointByContact`，禁止以两个数组的相同下标建立关联。这样当前顺序或未来顺序变化都不会把 LH/RF 腿根错配。
+- `PerceptiveLeggedInterface` 的启动占位地图只有全零的 `elevation_before_postprocess` 和 `smooth_planar`，没有 `elevation`；占位层不得满足地形净空的数据有效条件。
+- 地图层在启动时尚不可用，不因缺层阻止控制器启动；但未通过第 11.1 节实时消息验证前，`enableTerrainClearance` 必须保持 `false`。
 - 开发和仿真阶段四项默认关闭，逐项验证；全部验收后只在 K20 感知配置中默认开启。
 
 启动参数验证：
@@ -159,7 +161,7 @@ perceptive_foothold_planning
 - 高度、距离、裕量和权重不得为负。
 - `previousFootholdFactor` 与 `freezePhase` 必须位于 `[0,1]`。
 - `contactTimeMatchTolerance` 必须大于等于零。
-- 运动学功能开启时，四个腿根 joint 必须存在、互不重复，且在 base 坐标系中的横向偏移绝对值大于小阈值。
+- 运动学功能开启时，每个运行时 3-DoF contact 必须恰有一个映射；四个腿根 joint 必须存在、互不重复，且在 base 坐标系中的横向偏移绝对值大于小阈值。缺项、未知 contact 或重复 joint 均启动失败。
 
 ## 8. Raibert 第一触地点修正
 
@@ -268,6 +270,17 @@ J=\|p_{heuristic}-p_{projected}\|^{2}+J_{kin,start}+J_{kin,end}
 - 单周期期望 base pose 或候选点非有限：该周期运动学附加惩罚置零，保留距离选择。
 - 不运行完整逆运动学，不修改 MPC 内关节约束。
 
+### 9.4 `nominalLegExtension` 的 Gazebo 标定门槛
+
+`nominalLegExtension=0.62 m` 只作为保守初值，不视为已验证阈值。K20 的大腿和小腿各为 `0.35 m`，并且 HAA 到 HFE、HFE 到 KFE 还分别包含 `0.093/0.0495 m` 和 `0.145 m` 偏移；忽略关节限位的 HAA 根到足端直腿几何上界约为 `0.733 m`。由于 KFE 上限为 `-0.698 rad`，该几何上界不是实际可达阈值，最终值必须通过带关节限位的 FK 扫描和 Gazebo 轨迹数据确定。
+
+在开启运动学惩罚前增加 Gazebo 标定步骤：
+
+1. 先令 `enableKinematicPenalty=false`，或令权重为零只发布诊断，执行站立、原地 Trot、`0~0.20 m/s` 加减速、8° 缓坡和 0.05 m 台阶。
+2. 记录四腿在接触开始和结束时的 `||p_foot^hip||` 分布、最大值及对应关节状态，并用 K20 关节限位做离线 FK 可达域扫描。
+3. 阈值应高于正常工况观测上界并保留测量/模型误差裕量，同时低于关节限位下的危险伸展区；四腿差异超出模型误差时先排查坐标或映射，不用单一阈值掩盖。
+4. 若 `0.62 m` 在正常步态持续产生惩罚，则在 G1 前完成调整；不得把该标定推迟到实机阶段。
+
 ## 10. 摆动后半程冻结
 
 ### 10.1 冻结对象必须值拥有
@@ -327,15 +340,33 @@ ReferenceManager 当前没有实际接触测量，因此本阶段不能声称按
 
 ## 11. 地形感知摆动高度
 
-### 11.1 地图层选择
+### 11.1 地图层来源和选择
 
-高度查询顺序固定为：
+源码中存在两个 `elevation_before_postprocess` 来源，必须区分：
 
-1. `terrainClearanceLayer`，K20 默认 `elevation_before_postprocess`。
-2. `terrainClearanceFallback`，K20 默认 `elevation`。
-3. 两者均不存在或没有有限数据时，关闭本周期地形增高并回退固定摆高。
+1. `PerceptiveLeggedInterface::setupOptimalControlProblem()` 在订阅到地图前手动创建 5×5 m 全零占位地图，其中包含 `elevation_before_postprocess` 和 `smooth_planar`。它只用于控制器/SDF 初始化，不是感知结果。
+2. 实际 `PlaneDecompositionPipeline::update()` 会先对输入 `elevation` 补洞、去噪和重采样，再由 `Postprocessing::postprocess()` 把此时的数据复制为 `elevation_before_postprocess`。随后原 `elevation` 继续执行非平面水平膨胀和高度偏移，并与 `smooth_planar` 一起通过 `PlanarTerrain` 消息发布。
 
-禁止回退到 `smooth_planar`。该层用于机身高度/姿态参考，可能平滑掉台阶和窄障碍。
+当前 K20 的 `height_layer` 为 `elevation`。`elevation_raw` 和 `segmentation` 是在 `PlanarTerrain` 发布之后才加入 `filtered_map` 的调试层，控制器订阅的 `PlanarTerrain` 不包含它们。OCS2 `SegmentedPlanesTerrainModel` 的路径高度剖面和 SDF 都直接读取 `elevation`，因此本设计固定使用后处理后的 `elevation`：
+
+- 障碍高度层在实现中固定为 `elevation`，不新增可切换的层名配置。
+- 不回退到 `elevation_before_postprocess`，避免把启动占位平面当成实时障碍地图。
+- 不回退到 `smooth_planar`，该层用于机身参考且可能平滑掉台阶和窄障碍。
+- `elevation` 已包含当前配置的非平面 0.03 m 高度偏移和 3 格水平膨胀；`terrainClearanceMargin` 是额外摆动安全裕量，二者叠加效果必须在 Gazebo 调整。
+
+`enableTerrainClearance` 的启用前硬门槛是从正在运行的感知栈至少采集一条实时消息：
+
+```bash
+ros2 topic list | rg '^/convex_plane_decomposition_ros/planar_terrain$'
+ros2 topic echo --once /convex_plane_decomposition_ros/planar_terrain \
+  | rg -n 'layers:|elevation|elevation_before_postprocess|smooth_planar'
+```
+
+必须在消息的 GridMap layer 列表中确认 `elevation` 存在且含有限样本。只在启动占位地图、RViz 配置、接收器回退代码、参数文件或源码的 `Postprocessing` 中看到层名不算运行验证。若没有活跃 publisher、命令超时或 `elevation` 不存在，检查不通过，`enableTerrainClearance` 继续保持 `false`。
+
+2026-07-30 本次检查结果：当前 ROS graph 只有 `/parameter_events` 和 `/rosout`，目标 topic 没有活跃 publisher，因此本项仍为未验证；启动完整感知栈后必须重跑以上命令。
+
+即使 `enableTerrainClearance=true`，当前地图只有启动占位层、缺少 `elevation` 或没有有限样本时，本周期也必须回退固定摆高，将 `terrainClearanceActive=false` 并输出节流警告/诊断。存在 `elevation_before_postprocess` 本身不能使该状态变为 active。
 
 高度查询使用 `ConvexRegionSelector` 当前周期持有的 `planarTerrain_` 地图副本，使候选平面、凸区域和摆高来自同一地图快照。
 
@@ -416,7 +447,9 @@ swingHeight             0.15  # 现有配置
 | 冻结期地图更新 | 使用值拥有快照，不访问旧 region 指针 |
 | 后半程时序小幅漂移 | 容差匹配并继续冻结 |
 | 后半程时序完全失配 | 保持缓存结果至计划触地边界 |
-| 障碍层缺失或无有限值 | 固定摆高 |
+| 只有启动占位的 `elevation_before_postprocess` | 固定摆高，置 `terrainClearanceActive=false`；不得判为实时地图 |
+| 启用前未验证实时 `elevation` | 保持 `enableTerrainClearance=false`，禁止进入地形净空功能 |
+| 运行中 `elevation` 缺失或无有限值 | 固定摆高，置 `terrainClearanceActive=false` 并输出节流警告/诊断 |
 | 路径存在少量 NaN | 跳过无效栅格 |
 | 地形尖峰 | 限制到 `maxTerrainAdaptation` |
 
@@ -431,7 +464,8 @@ swingHeight             0.15  # 现有配置
 - 规划髋坐标系的左右判定、腿根位置和内跨方向。
 - 被选平面、投影点、凸区域和快照有效性。
 - 摆动进度、事件匹配结果、冻结状态和冻结原因。
-- 实际使用的障碍层、有限样本数、最高障碍、增高限幅和最终 `maxHeightSequence`。
+- 地图是启动占位还是包含有效 `elevation` 的接收地图，以及有限样本数、最高障碍、增高限幅和最终 `maxHeightSequence`。
+- `terrainClearanceActive` 必须反映本周期是否真正使用了有效障碍层，不能仅复述配置开关。
 - 每项功能是否进入回退路径。
 
 高频数据进入现有调试发布接口或节流日志，禁止在 MPC 周期持续输出普通日志。
@@ -451,6 +485,8 @@ Raibert：
 
 运动学惩罚：
 
+- 按足端名称解析 `legRootJointByContact`，分别以 `LF, RF, LH, RH` 和打乱后的运行时 contact 顺序测试，得到相同映射。
+- 缺失 contact、未知 contact、重复 joint 和旧式并行数组均拒绝启用，防止 LH/RF 错配。
 - 从 K20 URDF 派生四条腿的左右侧和固定规划髋坐标。
 - LF/LH 向身体内侧跨步产生惩罚，向外不惩罚。
 - RF/RH 向身体内侧跨步产生惩罚，向外不惩罚。
@@ -472,8 +508,10 @@ Raibert：
 
 - 平地保持原摆高。
 - 上坡、下坡、中间台阶和路径外障碍。
-- 明确忽略 `smooth_planar`，优先使用 `elevation_before_postprocess`。
-- 首选层缺失时使用 `elevation`；两层均缺失时回退。
+- 固定使用 `elevation`，不读取 `smooth_planar` 或 `elevation_before_postprocess`。
+- 启动占位地图虽包含有限的全零 `elevation_before_postprocess`，地形净空仍必须 inactive。
+- 收到含有限 `elevation` 的真实 `PlanarTerrain` 后才允许 active；运行中该层缺失或全无效时显式回退。
+- 后处理的非平面高度偏移/水平膨胀与 `terrainClearanceMargin` 叠加后的 Gazebo 标定。
 - NaN、全无效、地图外、异常尖峰和同栅格起落点。
 - 验证 `maxHeightSequence` 不包含 `swingHeight`，防止重复加高。
 
@@ -486,6 +524,8 @@ Raibert：
 ### 14.2 Gazebo
 
 G0 基线：四项关闭，记录 MPC 频率、求解时间、速度误差、落脚点变化、足端高度和安全故障。
+
+G0.5 运动学阈值标定：保持运动学惩罚不生效，只发布第 9.4 节诊断；完成带关节限位的 FK 扫描和站立、Trot、缓坡、台阶数据采集，确定 `nominalLegExtension` 后才能进入 G1。
 
 G1 平地：
 
@@ -505,6 +545,8 @@ Gazebo 通过标准：
 - 足端目标不发生跨平面跳变。
 - 台阶场景的摆动参考高于检测到的路径障碍。
 - 四项关闭时保持基线行为。
+- `nominalLegExtension` 在 G0.5 完成标定，正常步态不出现持续误惩罚。
+- 地形净空启用前已从实时消息验证 `elevation`；运行中若故障注入移除该层，诊断必须变为 inactive 并产生节流警告。
 - MPC 保持实际 60 Hz，无持续超时。
 - 新增参考规划耗时相对基线增幅不超过 20%。
 
@@ -557,35 +599,39 @@ H3 低台阶：初始台阶 0.03 m、速度不高于 0.10 m/s；通过后再提�
 
 ## 16. 实施顺序
 
-1. 新增配置结构和配置加载测试，验证缺失配置保持旧行为。
-2. 建立 Raibert 纯函数测试，确认 CoM 速度语义、二维限幅、死区和提交顺序。
-3. 实现 Raibert 修正，保持开关默认关闭。
-4. 建立 K20 规划髋坐标和运动学惩罚测试，再接入候选评分。
-5. 建立值拥有快照和接触事件匹配测试，再实现后半程冻结。
-6. 建立障碍层选择和高度剖面测试，再构造 `maxHeightSequence`。
-7. 验证四项关闭时与旧输出一致。
-8. 按 G0、G1、G2、G3 完成 Gazebo 验收。
-9. 按 H0、H1、H2、H3 完成 K20 实机低速验收。
-10. 全部通过后，将 K20 感知配置中的四项开关设为默认开启。
+1. 启动完整感知栈，执行第 11.1 节 `ros2 topic echo`，确认实时 `PlanarTerrain` 包含有限的 `elevation`；验证失败时停止进入实现，先修复地图发布链路。
+2. 新增配置结构和配置加载测试，验证按 contact name 映射腿根，且缺失配置保持旧行为。
+3. 建立 Raibert 纯函数测试，确认 CoM 速度语义、二维限幅、死区和提交顺序。
+4. 实现 Raibert 修正，保持开关默认关闭。
+5. 建立 K20 规划髋坐标和运动学惩罚测试，再接入候选评分。
+6. 建立值拥有快照和接触事件匹配测试，再实现后半程冻结。
+7. 建立障碍层选择和高度剖面测试，再构造 `maxHeightSequence`。
+8. 验证四项关闭时与旧输出一致。
+9. 按 G0、G0.5、G1、G2、G3 完成 Gazebo 验收和运动学阈值标定。
+10. 按 H0、H1、H2、H3 完成 K20 实机低速验收。
+11. 全部通过后，将 K20 感知配置中的四项开关设为默认开启。
 
 ## 17. 成功标准
 
 - 四项功能可独立开启和关闭。
 - 配置缺失或全部关闭时不改变当前 K20 行为。
 - 诊断明确区分 CoM 速度代理与论文的 base velocity。
+- 腿根由 contact name 显式映射，运行时 contact 顺序改变不会造成腿根错配。
 - 左右四腿内跨方向由 K20 模型正确派生，不受四个 HAA 零旋转影响。
+- `nominalLegExtension` 在 Gazebo 阶段完成标定，不能把正常步幅持续判成过伸。
 - 冻结状态不保留任何跨地图周期裸指针。
 - 摆动后半程不再切换落脚平面、凸区域或触地点高度。
-- 地形净空不读取 `smooth_planar`，台阶路径能自动提高摆动足净空。
+- 地形净空启用前验证实时 `elevation`，启动占位的 `elevation_before_postprocess` 不得激活功能；不读取 `smooth_planar`，运行中缺层会显式降级，台阶路径能自动提高摆动足净空。
 - `maxHeightSequence` 与现有 `swingHeight` 只各加入一次。
 - 平地、缓坡和低台阶无需切换规划模式。
 - 单元测试、Gazebo 和实机低速验收达到本文门槛。
 
 ## 18. 实现前最终检查清单
 
-- [ ] 用户确认使用 CoM 速度作为本阶段 Raibert 代理。
-- [ ] 用户确认 `freezePhase=0.5` 作为论文后半程冻结的 K20 实现。
-- [ ] K20 Pinocchio 模型中四个 `legRootJointNames` 可解析。
-- [ ] 障碍地图实际包含 `elevation_before_postprocess` 或 `elevation`。
+- [x] 设计决定：使用世界系 CoM 速度作为本阶段 Raibert 代理，并在诊断中明确它不是 base velocity。
+- [x] 设计决定：使用 `freezePhase=0.5` 实现论文“摆动后半程冻结”；该值可在 Gazebo 数据表明必要时再标定。
+- [ ] K20 Pinocchio 模型中 `LF_FOOT -> LF_HAA`、`RF_FOOT -> RF_HAA`、`LH_FOOT -> LH_HAA`、`RH_FOOT -> RH_HAA` 均可解析且唯一。
+- [ ] 启动完整感知栈后，从实时消息确认障碍地图包含有限的 `elevation`；2026-07-30 检查时无目标 topic publisher。
+- [ ] 在 G0.5 完成 `nominalLegExtension` 标定，确认正常步态无持续误惩罚。
 - [ ] 新测试可在不启动 Gazebo 的情况下覆盖四项核心算法。
 - [ ] 原设计文档保留，新实现仅以本修订版为基线。
